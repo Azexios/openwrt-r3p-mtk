@@ -33,7 +33,7 @@ end
 
 function index()
 
-    entry({"admin", "network", "wifi"}, template("admin_mtk/mtk_wifi_overview"), _("Wireless"), 25)
+    entry({"admin", "network", "wifi"}, template("admin_mtk/mtk_wifi_overview"), _("Wireless"), 25).acl_depends={ "unauthenticated" }
     entry({"admin", "network", "wifi", "dev_cfg_view"}, template("admin_mtk/mtk_wifi_dev_cfg")).leaf = true
     entry({"admin", "network", "wifi", "dev_cfg"}, call("dev_cfg")).leaf = true
     entry({"admin", "network", "wifi", "dev_cfg_reset"}, call("dev_cfg_reset")).leaf = true
@@ -75,12 +75,6 @@ function dev_cfg(devname)
         end
     end
 
-    if mtkwifi.band(cfgs.WirelessMode) == "5G" then
-        cfgs.CountryRegionABand = http.formvalue("__cr");
-    else
-        cfgs.CountryRegion = http.formvalue("__cr");
-    end
-
     if cfgs.Channel == "0" then -- Auto Channel Select
         cfgs.AutoChannelSelect = "3"
     else
@@ -107,7 +101,6 @@ function dev_cfg(devname)
     elseif http.formvalue("__bw") == "161" then
         cfgs.HT_BW = 1
         cfgs.VHT_BW = 3
-        cfgs.VHT_Sec80_Channel = http.formvalue("VHT_Sec80_Channel") or ""
     end
 
     local mimo = http.formvalue("__mimo")
@@ -583,130 +576,6 @@ function get_raw_profile()
     http.write_json("get_raw_profile")
 end
 
-function get_country_region_list()
-    local mode = http.formvalue("mode")
-    local cr_list;
-
-    if mtkwifi.band(mode) == "5G" then
-        cr_list = mtkwifi.CountryRegionList_5G_All
-    else
-        cr_list = mtkwifi.CountryRegionList_2G_All
-    end
-
-    http.write_json(cr_list)
-end
-
-function remove_ch_by_region(ch_list, region)
-    for i = #ch_list,2,-1 do
-        if not ch_list[i].region[region] then
-            table.remove(ch_list, i)
-        end
-    end
-end
-
-function get_channel_list()
-    local mode = http.formvalue("mode")
-    local region = tonumber(http.formvalue("country_region")) or 1
-    local ch_list
-
-    if mtkwifi.band(mode) == "5G" then
-        ch_list = mtkwifi.ChannelList_5G_All
-    else
-        ch_list = mtkwifi.ChannelList_2G_All
-    end
-
-    remove_ch_by_region(ch_list, region)
-    http.write_json(ch_list)
-end
-
-function get_HT_ext_channel_list()
-    local ch_cur = tonumber(http.formvalue("ch_cur"))
-    local region = tonumber(http.formvalue("country_region")) or 1
-    local ext_ch_list = {}
-
-    if ch_cur <= 14 then -- 2.4G Channel
-        local ch_list = mtkwifi.ChannelList_2G_All
-        local below_ch = ch_cur - 4
-        local above_ch = ch_cur + 4
-        local i = 1
-
-        if below_ch > 0 and ch_list[below_ch + 1].region[region] then
-            ext_ch_list[i] = {}
-            ext_ch_list[i].val = 0
-            ext_ch_list[i].text = ch_list[below_ch + 1].text
-            i = i + 1
-        end
-
-        if above_ch <= 14 and ch_list[above_ch + 1].region[region] then
-            ext_ch_list[i] = {}
-            ext_ch_list[i].val = 1
-            ext_ch_list[i].text = ch_list[above_ch + 1].text
-        end
-    else  -- 5G Channel
-        local ch_list = mtkwifi.ChannelList_5G_All
-        local ext_ch_idx = -1
-        local len = 0
-
-        for k, v in ipairs(ch_list) do
-            len = len + 1
-            if v.channel == ch_cur then
-                ext_ch_idx = (k % 2 == 0) and k + 1 or k - 1
-            end
-        end
-
-        if ext_ch_idx > 0 and ext_ch_idx < len and ch_list[ext_ch_idx].region[region] then
-            ext_ch_list[1] = {}
-            ext_ch_list[1].val = ext_ch_idx % 2
-            ext_ch_list[1].text = ch_list[ext_ch_idx].text
-        end
-    end
-
-    http.write_json(ext_ch_list)
-end
-
-function get_5G_2nd_80Mhz_channel_list()
-    local ch_cur = tonumber(http.formvalue("ch_cur"))
-    local region = tonumber(http.formvalue("country_region"))
-    local ch_list = mtkwifi.ChannelList_5G_2nd_80MHZ_ALL
-    local ch_list_5g = mtkwifi.ChannelList_5G_All
-    local i, j, test_ch, test_idx
-    local bw80_1st_idx = -1
-
-    -- remove adjacent freqencies starting from list tail.
-    for i = #ch_list,1,-1 do
-        for j = 0,3 do
-            if ch_list[i].channel == -1 then
-                break
-            end
-
-            test_ch = ch_list[i].channel + j * 4
-            test_idx = ch_list[i].chidx + j
-
-            if test_ch == ch_cur then
-            if i + 1 <= #ch_list and ch_list[i + 1] then
-                table.remove(ch_list, i + 1)
-            end
-            table.remove(ch_list, i)
-                bw80_1st_idx = i
-                break
-            end
-
-            if i == (bw80_1st_idx - 1) or (not ch_list_5g[test_idx].region[region]) then
-                table.remove(ch_list, i)
-            break
-        end
-    end
-    end
-
-    -- remove unused channel.
-    for i = #ch_list,1,-1 do
-        if ch_list[i].channel == -1 then
-            table.remove(ch_list, i)
-        end
-    end
-    http.write_json(ch_list)
-end
-
 function apcli_cfg(dev, vif)
     local devname = dev
     mtkwifi.debug(devname)
@@ -722,6 +591,12 @@ function apcli_cfg(dev, vif)
         elseif string.byte(k) ~= string.byte("_") then
             cfgs[k] = v or ""
         end
+    end
+	
+	if cfgs.Channel == "0" then -- Auto Channel Select
+        cfgs.AutoChannelSelect = "3"
+    else
+        cfgs.AutoChannelSelect = "0"
     end
 
     cfgs.ApCliSsid = ''..mtkwifi.__handleSpecialChars(http.formvalue("ApCliSsid"))
@@ -798,4 +673,3 @@ function apcli_disconnect(dev, vif)
     os.execute("ifconfig "..vifname.." down")
     luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
-

@@ -68,7 +68,7 @@ local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
   </fieldset>
 <% else %>
   <fieldset class="cbi-section">
-    <legend>无线高级设置 - <%=vifname and devname.."@"..vifname or devname%>
+    <legend>Interface Configurations - <%=vifname and devname.."@"..vifname or devname%>
 <%
 local diff = mtkwifi.diff_profile(dev.profile)
 if next(diff) ~= nil then
@@ -102,7 +102,7 @@ end
         </tr>
         <% end %>
         <tr>
-          <td>加密</td>
+          <td>Auth Mode</td>
           <td>
             <select name="__authmode" cfg="AuthMode" id="AuthMode" onchange="AuthMode_onchange(this.options[this.options.selectedIndex].value)">
               <%
@@ -140,7 +140,7 @@ end
       </tbody>
       <tbody id="wpacommon" style="display:none;">
         <tr>
-          <td>算法</td>
+          <td>WPA Algorithm</td>
           <td>
             <select name="__wpa_encrypttype" id="__wpa_encrypttype" cfg="EncrypType">
             <% for _,v in ipairs(dev.WPA_Enc_List) do %>
@@ -151,15 +151,15 @@ end
           </td>
         </tr>
         <tr>
-          <td>密钥更新时间</td>
+          <td>Key Renewal Interval &ensp;</td>
           <td>
-            <input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" />  (0 ~ 4194303) 秒
+            <input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /> second(s) (0 ~ 4194303)
           </td>
         </tr>
       </tbody>
       <tbody id="WPA2PSK" style="display:none;">
         <tr>
-          <td>密码</td>
+          <td>Key</td>
           <td>
             <input value="<%=vif.__wpapsk%>" type="text" name="<%="WPAPSK"..vifidx%>" id="<%="WPAPSK"..vifidx%>" />
           </td>
@@ -331,7 +331,7 @@ end
       </tbody>
       <tbody>
         <tr>
-          <td>隐藏 SSID</td>
+          <td>Hidden SSID</td>
           <td>
             <input name="__hidessid" cfg="HideSSID" value="1"
             <% if vif.__hidessid == "1" then %>
@@ -340,7 +340,7 @@ end
           </td>
         </tr>
         <tr>
-          <td>隔离客户端</td>
+          <td>AP Isolation</td>
           <td>
             <input name="__noforwarding" cfg="NoForwarding" value="1"
             <% if vif.__noforwarding == "1" then %>
@@ -349,7 +349,7 @@ end
           </td>
         </tr>
         <tr>
-          <td>WMM 模式</td>
+          <td>WMM Capable</td>
           <td>
             <input name="__wmmcapable" cfg="WmmCapable" value="1"
             <% if vif.__wmmcapable ~= "0" then %>
@@ -358,7 +358,7 @@ end
           </td>
         </tr>
         <tr>
-          <td>强制发射速率 ( 0为自动，建议值 ）</td>
+          <td>TX Rate</td>
           <td>
             <input value="<%=vif.__txrate or 0%>" name="__txrate" id="__txrate" />
           </td>
@@ -371,16 +371,14 @@ end
         </tr>
       </tfoot>
     </table>
-
-
-
   </fieldset>
 
     <div class="cbi-page-actions">
-        <input class="cbi-button cbi-button-apply" value="重启无线" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");' />
-      <input class="cbi-button cbi-button-apply" value="保存设置" type="submit" />
-      <input class="cbi-button cbi-button-apply" name="__apply" value="保存&应用" type="submit" />
-      <input class="cbi-button cbi-button-reset" value="重置" type="reset" />
+	  <input class="cbi-button cbi-button-link" value="Back" type="button" onclick="history.back();" />
+      <input class="cbi-button cbi-button-apply" value="Reload" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");' />
+      <input class="cbi-button cbi-button-save" value="Save" type="submit" />
+      <input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" />
+      <input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
     </div>
 <% end %> <!-- if not dev -->
 </form>

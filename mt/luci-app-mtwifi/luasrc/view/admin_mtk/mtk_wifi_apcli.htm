@@ -39,45 +39,45 @@ local debug = 0
 
 <div id="loading" style="margin-top: 1em; display: none;">
 <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:e;" />
-    &nbsp;&nbsp;&nbsp; 正在处理，请耐心等待......
+    &nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
 </div>
 
 <form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg", devname, vifname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
 
     <fieldset class="cbi-section" id="vif-cfg-apcli">
-        <legend> <a name="apcli_scan_section">无线中继 - <%=devname.."@"..vifname%> </a></legend>
+        <legend> <a name="apcli_scan_section">Wireless Repeater - <%=devname.."@"..vifname%> </a></legend>
         <br />
         <p class="left">
-            <input id="scan" type="button" class="cbi-button cbi-button-find" onclick="get_ap_list('<%=vifname%>')" value="扫描网络" />
+            <input id="scan" type="button" class="cbi-button cbi-button-find" onclick="get_ap_list('<%=vifname%>')" value="Scan Wireless Network" />
         </p>
         <div id="loading" style="display:none;">
         <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle;" />
-            &nbsp;&nbsp;&nbsp; 正在处理，请耐心等待......
+            &nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
         </div>
         <div id="aplist">
         </div>
     </fieldset>
     <fieldset class="cbi-section" id="vif-cfg-apcli-config">
-        <legend> <a name="apcli_cfg_section"> 中继参数</a> </legend>
+        <legend> <a name="apcli_cfg_section"> Connection Configurations</a> </legend>
         <table class="cbi-section-table">
             <tbody>
             <tr><th class="th1"></th><th></th><th></th></tr>
             <tr>
-                <td>上级无线 SSID</td>
+                <td>Root AP SSID</td>
                 <td>
                     <input type="text" name="ApCliSsid" id="ApCliSsid" value="<%=cfgs.ApCliSsid%>"/>
                 </td>
                 <td></td>
             </tr>
             <tr>
-                <td>上级无线信道</td>
+                <td>Root AP Channel</td>
                 <td>
-                    <input type="text" name="Channel" id="Channel" value="<%=dev.Channel%>"/>
+                    <input type="text" name="Channel" id="Channel" value="<%=cfgs.Channel%>"/>
                 </td>
-                <td> <span style="color:red;">将会重置当前信道.</span></td>
+                <td> <span style="color:red;">&ensp; This will overwrite ap channel.</span></td>
             </tr>
             <tr>
-                <td>上级无线加密模式</td>
+                <td>Root AP Authentication Mode &ensp;</td>
                 <td>
                     <select name="ApCliAuthMode" cfg="ApCliAuthMode" id="ApCliAuthMode" onchange="ApCliAuthMode_onchange(this.options[this.options.selectedIndex].value)">
                         <% for _,v in ipairs(dev.ApCliAuthModeList) do %>
@@ -101,7 +101,7 @@ local debug = 0
             </tbody>
             <tbody id="apcli_wpa"<% if cfgs.ApCliAuthMode ~= "WPA2PSK" then %> style="display: none;"<% end %>>
             <tr>
-                <td>上级无线加密算法</td>
+                <td>Root AP Encryption</td>
                 <td>
                     <select name="wpa_ApCliEncrypType" id="wpa_ApCliEncrypType" >
                     <% for _, v in ipairs(dev.WPA_Enc_List) do %>
@@ -113,7 +113,7 @@ local debug = 0
                 <td></td>
             </tr>
             <tr>
-                <td>上级无线密码</td>
+                <td>Root AP WPA Key</td>
                 <td>
                     <input type="text" name="ApCliWPAPSK" id="ApCliWPAPSK" value="<%=cfgs.ApCliWPAPSK%>"/>
                 </td>
@@ -122,7 +122,7 @@ local debug = 0
             </tbody>
             <tbody id="apcli_wep"<% if cfgs.ApCliAuthMode ~= "WEP" then %> style="display: none;"<% end %>>
             <tr>
-                <td>上级无线加密算法</td>
+                <td>Root AP Encryption</td>
                 <td>
                     <select name="wep_ApCliEncrypType" id="wep_ApCliEncrypType" >
                     <% for _, v in ipairs(dev.WEP_Enc_List) do %>
@@ -134,7 +134,7 @@ local debug = 0
                 <td></td>
             </tr>
             <tr>
-                <td>上级无线密码</td>
+                <td>Root AP WEP Key</td>
                 <td>
                     <input type="text" name="ApCliKey1Str" id="ApCliKey1Str" value="<%=cfgs.ApCliKey1Str%>"/>
                     <input type="hidden" name="ApCliDefaultKeyID" value="1"/>
@@ -144,11 +144,11 @@ local debug = 0
             </tbody>
         </table>
     </fieldset>
-
+	
     <div class="cbi-page-actions" id="apcli_form_buttons">
-        <input class="cbi-button cbi-button-apply" value="重启无线" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");' />
-        <input class="cbi-button cbi-button-apply" value="保存设置" type="submit" />
-        <input class="cbi-button cbi-button-reset" value="重置设置" type="reset" />
+		<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
+        <input class="cbi-button cbi-button-positive" value="Save" type="submit" />
+        <input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
     </div>
 </form>
 
@@ -205,7 +205,7 @@ local debug = 0
              || aplist[i].authmode == "WPAPSK"
              || aplist[i].authmode == "WPA2PSK"
              || aplist[i].authmode == "WPAPSKWPA2PSK") {
-                td5.innerHTML = '<a href="javascript:choose_rootap(\''+i+'\')" >启用</a>';
+                td5.innerHTML = '<a href="javascript:choose_rootap(\''+i+'\')" >Choose This</a>';
 
             } else {
                 td5.innerHTML = 'Security Not Supported';
@@ -214,17 +214,17 @@ local debug = 0
 
         var tr = table.insertRow(0);
         var td0 = tr.insertCell(0);
-        td0.innerHTML = '<strong>无线名称</strong>';
+        td0.innerHTML = '<strong>SSID &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
         var td1 = tr.insertCell(1);
-        td1.innerHTML = '<strong>信道</strong>';
+        td1.innerHTML = '<strong>Channel &emsp;</strong>';
         var td2 = tr.insertCell(2);
-        td2.innerHTML = '<strong>BSSID</strong>';
+        td2.innerHTML = '<strong>BSSID &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
         var td3 = tr.insertCell(3);
-        td3.innerHTML = '<strong>加密方式</strong>';
+        td3.innerHTML = '<strong>Security &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
         var td4 = tr.insertCell(4);
-        td4.innerHTML = '<strong>信号强度</strong>';
+        td4.innerHTML = '<strong>RSSI &emsp;</strong>';
         var td5 = tr.insertCell(5);
-        td5.innerHTML = '<strong>动作</strong>';
+        td5.innerHTML = '<strong>Action</strong>';
 
         var div = document.getElementById('aplist');
         div.innerHTML = "";
@@ -245,32 +245,6 @@ local debug = 0
                 document.getElementById("loading").style.display="none";
             }
         );
-    }
-
-    function toggle_apcli (show) {
-        if (show) {
-            document.getElementById('apcli_cfg').style.display = "";
-
-            var a = document.getElementById('ApCliAuthMode')
-            var to = a.options[a.options.selectedIndex].value
-            if (to == "WPA2PSK"
-             || to == "WPAPSK"
-             || to == "WPAPSKWPA2PSK") {
-                document.getElementById("apcli_wpa").style.display="";
-                document.getElementById("apcli_wep").style.display="none";
-            } else if (to == "WEP") {
-                document.getElementById("apcli_wpa").style.display="none";
-                document.getElementById("apcli_wep").style.display="";
-            } else {
-                document.getElementById("apcli_wpa").style.display="none";
-                document.getElementById("apcli_wep").style.display="none";
-            }
-        }
-        else {
-            document.getElementById('apcli_cfg').style.display = "none";
-            document.getElementById('apcli_wpa').style.display = "none";
-            document.getElementById('apcli_wep').style.display = "none";
-        }
     }
 
     function ApCliAuthMode_onchange (to) {
@@ -314,13 +288,8 @@ local debug = 0
 
     window.onload = function() {
         ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").value);
-        <% if cfgs.ApCliEnable == "1" then %>
-        toggle_apcli(true);
-        <% else %>
-        toggle_apcli(false);
-        <% end %>
-     }
 
+     }
 
 </script>
 

@@ -228,19 +228,19 @@ end
 local WirelessModeList = {
     [0] = "B/G mixed",
     [1] = "B only",
-    [2] = "A only",
-    -- [3] = "A/B/G mixed",
+    [2] = "A only in 5G",
+	[3] = "B/G mixed",
     [4] = "G only",
     -- [5] = "A/B/G/GN/AN mixed",
     [6] = "N in 2.4G only",
     [7] = "G/GN", -- i.e., no CCK mode
-    [8] = "A/N in 5 band",
-    [9] = "B/G/GN mode",
-    -- [10] = "A/AN/G/GN mode", --not support B mode
+    [8] = "A/AN mixed 5G",
+    [9] = "B/G/N mixed",
+	[10] = "G/N mixed",
     [11] = "only N in 5G band",
     -- [12] = "B/G/GN/A/AN/AC mixed",
-    -- [13] = "G/GN/A/AN/AC mixed", -- no B mode
-    [14] = "A/AC/AN mixed",
+	[13] = "N only",
+    [14] = "A/AN/AC mixed 5G",
     [15] = "AC/AN mixed", --but no A mode
     [16] = "AX/B/G/GN mode",
     [17] = "AX/AC/AN mixed",
@@ -257,116 +257,7 @@ local DevicePropertyMap = {
     {device="MT7612", band={"2", "8", "11", "14", "15"}},
     {device="MT7662", band={"2", "8", "11", "14", "15"}},
     -- Mix
-    {device="MT7615", band={"0", "1", "4", "9", "2", "8", "14", "15","16","17"}}
-}
-
-mtkwifi.CountryRegionList_5G_All = {
-    {region=0, text="0: Ch36~64, Ch149~165"},
-    {region=1, text="1: Ch36~64, Ch100~140"},
-    {region=2, text="2: Ch36~64"},
-    {region=3, text="3: Ch52~64, Ch149~161"},
-    {region=4, text="4: Ch149~165"},
-    {region=5, text="5: Ch149~161"},
-    {region=6, text="6: Ch36~48"},
-    {region=7, text="7: Ch36~64, Ch100~140, Ch149~165"},
-    {region=8, text="8: Ch52~64"},
-    {region=9, text="9: Ch36~64, Ch100~116, Ch132~140, Ch149~165"},
-    {region=10, text="10: Ch36~48, Ch149~165"},
-    {region=11, text="11: Ch36~64, Ch100~120, Ch149~161"},
-    {region=12, text="12: Ch36~64, Ch100~144"},
-    {region=13, text="13: Ch36~64, Ch100~144, Ch149~165"},
-    {region=14, text="14: Ch36~64, Ch100~116, Ch132~144, Ch149~165"},
-    {region=15, text="15: Ch149~173"},
-    {region=16, text="16: Ch52~64, Ch149~165"},
-    {region=17, text="17: Ch36~48, Ch149~161"},
-    {region=18, text="18: Ch36~64, Ch100~116, Ch132~140"},
-    {region=19, text="19: Ch56~64, Ch100~140, Ch149~161"},
-    {region=20, text="20: Ch36~64, Ch100~124, Ch149~161"},
-    {region=21, text="21: Ch36~64, Ch100~140, Ch149~161"},
-    {region=22, text="22: Ch100~140"},
-    {region=30, text="30: Ch36~48, Ch52~64, Ch100~140, Ch149~165"},
-    {region=31, text="31: Ch52~64, Ch100~140, Ch149~165"},
-    {region=32, text="32: Ch36~48, Ch52~64, Ch100~140, Ch149~161"},
-    {region=33, text="33: Ch36~48, Ch52~64, Ch100~140"},
-    {region=34, text="34: Ch36~48, Ch52~64, Ch149~165"},
-    {region=35, text="35: Ch36~48, Ch52~64"},
-    {region=36, text="36: Ch36~48, Ch100~140, Ch149~165"},
-    {region=37, text="37: Ch36~48, Ch52~64, Ch149~165, Ch173"},
-}
-
-mtkwifi.CountryRegionList_2G_All = {
-    {region=0, text="0: Ch1~11"},
-    {region=1, text="1: Ch1~13"},
-    {region=2, text="2: Ch10~11"},
-    {region=3, text="3: Ch10~13"},
-    {region=4, text="4: Ch14"},
-    {region=5, text="5: Ch1~14"},
-    {region=6, text="6: Ch3~9"},
-    {region=7, text="7: Ch5~13"},
-    {region=31, text="31: Ch1~11, Ch12~14"},
-    {region=32, text="32: Ch1~11, Ch12~13"},
-    {region=33, text="33: Ch1~14"},
-}
-
-mtkwifi.ChannelList_5G_All = {
-    {channel=0,  text="Channel 0 (Auto )", region={}},
-    {channel= 36, text="Channel  36 (5.180 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [30]=1, [32]=1, [33]=1, [34]=1, [35]=1, [36]=1, [37]=1}},
-    {channel= 40, text="Channel  40 (5.200 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [30]=1, [32]=1, [33]=1, [34]=1, [35]=1, [36]=1, [37]=1}},
-    {channel= 44, text="Channel  44 (5.220 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [30]=1, [32]=1, [33]=1, [34]=1, [35]=1, [36]=1, [37]=1}},
-    {channel= 48, text="Channel  48 (5.240 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [30]=1, [32]=1, [33]=1, [34]=1, [35]=1, [36]=1, [37]=1}},
-    {channel= 52, text="Channel  52 (5.260 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [33]=1, [34]=1, [35]=1, [37]=1}},
-    {channel= 56, text="Channel  56 (5.280 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [33]=1, [34]=1, [35]=1, [37]=1}},
-    {channel= 60, text="Channel  60 (5.300 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [33]=1, [34]=1, [35]=1, [37]=1}},
-    {channel= 64, text="Channel  64 (5.320 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [33]=1, [34]=1, [35]=1, [37]=1}},
-    {channel=100, text="Channel 100 (5.500 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=104, text="Channel 104 (5.520 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=108, text="Channel 108 (5.540 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=112, text="Channel 112 (5.560 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=116, text="Channel 116 (5.580 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=120, text="Channel 120 (5.600 GHz)", region={[1]=1, [7]=1, [11]=1, [12]=1, [13]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=124, text="Channel 124 (5.620 GHz)", region={[1]=1, [7]=1, [12]=1, [13]=1, [19]=1, [20]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=128, text="Channel 128 (5.640 GHz)", region={[1]=1, [7]=1, [12]=1, [13]=1, [19]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=132, text="Channel 132 (5.660 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=136, text="Channel 136 (5.680 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=140, text="Channel 140 (5.700 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [30]=1, [31]=1, [32]=1, [33]=1, [36]=1}},
-    {channel=144, text="Channel 144 (5.720 GHz)", region={[12]=1, [13]=1, [14]=1}},
-    {channel=149, text="Channel 149 (5.745 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [34]=1, [36]=1, [37]=1}},
-    {channel=153, text="Channel 153 (5.765 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [34]=1, [36]=1, [37]=1}},
-    {channel=157, text="Channel 157 (5.785 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [34]=1, [36]=1, [37]=1}},
-    {channel=161, text="Channel 161 (5.805 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [30]=1, [31]=1, [32]=1, [34]=1, [36]=1, [37]=1}},
-    {channel=165, text="Channel 165 (5.825 GHz)", region={[0]=1, [4]=1, [7]=1, [9]=1, [10]=1, [13]=1, [14]=1, [15]=1, [16]=1, [30]=1, [31]=1, [34]=1, [36]=1, [37]=1}},
-    {channel=169, text="Channel 169 (5.845 GHz)", region={[15]=1}},
-    {channel=173, text="Channel 173 (5.865 GHz)", region={[15]=1, [37]=1}},
-}
-
-mtkwifi.ChannelList_2G_All = {
-    {channel=0, text="Channel 0 (Auto )", region={}},
-    {channel= 1, text="Channel  1 (2412 GHz)", region={[0]=1, [1]=1, [5]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 2, text="Channel  2 (2417 GHz)", region={[0]=1, [1]=1, [5]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 3, text="Channel  3 (2422 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 4, text="Channel  4 (2427 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 5, text="Channel  5 (2432 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 6, text="Channel  6 (2437 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 7, text="Channel  7 (2442 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 8, text="Channel  8 (2447 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel= 9, text="Channel  9 (2452 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel=10, text="Channel 10 (2457 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel=11, text="Channel 11 (2462 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel=12, text="Channel 12 (2467 GHz)", region={[1]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel=13, text="Channel 13 (2472 GHz)", region={[1]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
-    {channel=14, text="Channel 14 (2477 GHz)", region={[4]=1, [5]=1, [31]=1, [33]=1}},
-}
-
-mtkwifi.ChannelList_5G_2nd_80MHZ_ALL = {
-    {channel=36, text="Ch36(5.180 GHz) - Ch48(5.240 GHz)", chidx=2},
-    {channel=52, text="Ch52(5.260 GHz) - Ch64(5.320 GHz)", chidx=6},
-    {channel=-1, text="Channel between 64 100",  chidx=-1},
-    {channel=100, text="Ch100(5.500 GHz) - Ch112(5.560 GHz)", chidx=10},
-    {channel=112, text="Ch116(5.580 GHz) - Ch128(5.640 GHz)", chidx=14},
-    {channel=-1, text="Channel between 128 132", chidx=-1},
-    {channel=132, text="Ch132(5.660 GHz) - Ch144(5.720 GHz)", chidx=18},
-    {channel=-1, text="Channel between 144 149", chidx=-1},
-    {channel=149, text="Ch149(5.745 GHz) - Ch161(5.805 GHz)", chidx=22},
+    {device="MT7615", band={"1", "2", "3", "8", "9", "10", "13", "14"}}
 }
 
 local AuthModeList = {
@@ -423,22 +314,6 @@ local dbdc_apcli_prefix = {
     {"apclii", "apcliy"},
     {"apclie", "apcliz"},
 }
-
-function mtkwifi.band(mode)
-    local i = tonumber(mode)
-    if i == 0
-    or i == 1
-    or i == 4
-    or i == 6
-    or i == 7
-    or i == 9
-    or i == 16 then
-        return "2.4G"
-    else
-        return "5G"
-    end
-end
-
 
 function mtkwifi.__cfg2list(str)
     -- delimeter == ";"
@@ -591,7 +466,7 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
             vifs[j].state = flags%2 == 1 and "up" or "down"
         end
         vifs[j].__ssid = cfgs["SSID"..j]
-        vifs[j].__bssid = mtkwifi.read_pipe("cat /sys/class/net/"..prefix..(j-1).."/address 2>/dev/null") or "?"
+        vifs[j].__bssid = mtkwifi.read_pipe("iwconfig "..prefix..(j-1).." | grep Point | sed 's/.*Point: //' 2>/dev/null") or "?"
         if dbdc then
             vifs[j].__channel = mtkwifi.token_get(cfgs.Channel, j, 0)
             vifs[j].__wirelessmode = mtkwifi.token_get(cfgs.WirelessMode, j, 0)
@@ -656,13 +531,13 @@ function mtkwifi.__setup_apcli(cfgs, devname, mainidx, subidx)
         local flags = tonumber(mtkwifi.read_pipe("cat /sys/class/net/"..apcli_name.."/flags 2>/dev/null")) or 0
         apcli.state = flags%2 == 1 and "up" or "down"
         if not ssid or ssid == "" then
-            apcli.status = "未连接"
+            apcli.status = "Disconnected"
         else
             apcli.ssid = ssid
-            apcli.status = "已连接"
+            apcli.status = "Connected"
         end
         apcli.devname = apcli_name
-        apcli.bssid = mtkwifi.read_pipe("cat /sys/class/net/"..apcli_name.."/address 2>/dev/null") or "?"
+        apcli.bssid = mtkwifi.read_pipe("iwconfig "..apcli_name.." | grep Point | sed 's/.*Point: //' 2>/dev/null") or "?"
         local flags = tonumber(mtkwifi.read_pipe("cat /sys/class/net/"..apcli_name.."/flags 2>/dev/null")) or 0
         apcli.ifstatus = flags%2 == 1 and "up" or ""
         return apcli
@@ -740,7 +615,6 @@ function mtkwifi.get_all_devs()
             devs[i].WEP_Enc_List = WEP_Enc_List
             devs[i].Channel = tonumber(cfgs.Channel)
             devs[i].DBDC_MODE = tonumber(cfgs.DBDC_MODE)
-            devs[i].band = devs[i].devband or mtkwifi.band(cfgs.WirelessMode)
 
             if cfgs.MUTxRxEnable then
                 if tonumber(cfgs.ETxBfEnCond)==1
