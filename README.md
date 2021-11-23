@@ -1,4 +1,5 @@
 # MTK Wi-Fi driver for OpenWrt (For Xiaomi Mi R3P).
 
-### Source
-https://github.com/coolsnowwolf/lede/tree/master/package/lean/mt
+### Sources
+https://github.com/coolsnowwolf/lede
+https://github.com/Nossiac/mtk-openwrt-feeds/tree/master/mtk-luci-plugin/luci-app-mtkwifi
