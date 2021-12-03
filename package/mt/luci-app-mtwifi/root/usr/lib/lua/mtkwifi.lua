@@ -112,6 +112,13 @@ function mtkwifi.read_pipe(pipe)
     return txt
 end
 
+-- Associated Stations
+dme = mtkwifi.read_pipe("dmesg -c > /dev/null && iwpriv ra0 show stainfo & iwpriv rai0 show stainfo & sleep 1") or "?"
+MAC = mtkwifi.read_pipe("dmesg | grep -ioE '([a-z0-9]{2}:){5}..' 2>/dev/null") or "?"
+RSSI = mtkwifi.read_pipe("dmesg | grep -ioE '([-0-9]{3}/){3}...' 2>/dev/null") or "?"
+BW = mtkwifi.read_pipe("dmesg | grep -ioE '([0-9]{2,3}[a-z]{1}/).{3,4}' 2>/dev/null" ) or "?"
+rate = mtkwifi.read_pipe("dmesg | grep -i -B 1 '0%' | grep -ioE '([0-9]{1,4}/[0-9]{1,4})' 2>/dev/null" ) or "?"
+	
 function mtkwifi.load_profile(path, raw)
     local cfgs = {}
     local content
@@ -538,6 +545,7 @@ function mtkwifi.__setup_apcli(cfgs, devname, mainidx, subidx)
         end
         apcli.devname = apcli_name
         apcli.bssid = mtkwifi.read_pipe("iwconfig "..apcli_name.." | grep Point | sed 's/.*Point: //' 2>/dev/null") or "?"
+		apcli.rate = mtkwifi.read_pipe("iwconfig "..apcli_name.." | grep Rate= | sed 's/.*Rate=//' 2>/dev/null") or "?"
         local flags = tonumber(mtkwifi.read_pipe("cat /sys/class/net/"..apcli_name.."/flags 2>/dev/null")) or 0
         apcli.ifstatus = flags%2 == 1 and "up" or ""
         return apcli

@@ -97,6 +97,8 @@ local devs = mtkwifi.get_all_devs()
                         <% if dev.apcli.status == "Connected" then %>
                         <strong>BSSID:</strong> <%=dev.apcli.bssid%> |
                         <strong>SSID:</strong> <%=dev.apcli.ssid%>
+						<br/>
+						<strong>Bit Rate:</strong> <%=dev.apcli.rate%>
                         <% else %>
                         Wireless is disabled or not associated
                         <% end %>
@@ -105,7 +107,7 @@ local devs = mtkwifi.get_all_devs()
 						<% if dev.apcli.state == "up" then %>
 							<% if dev.apcli.status == "Connected" then %>
 								<input class="cbi-button cbi-button-reload" style="width:100px" title="Reload Wi-Fi network" value="Reload" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname,dev.apcli.vifname)%>")' />
-								<input class="cbi-button cbi-button-remove" style="width:100px" title="Disable Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
+								<input class="cbi-button cbi-button-remove" style="width:100px" title="Disconnect Wi-Fi network" value="Disconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
 							<% else %>
 								<input class="cbi-button cbi-button-reload" style="width:100px" title="Connect Wi-Fi network" value="Connect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname,dev.apcli.vifname)%>")' />
 								<input class="cbi-button cbi-button-remove" style="width:100px" title="Disable Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
@@ -123,29 +125,34 @@ local devs = mtkwifi.get_all_devs()
     </fieldset>
     <% end %>
 
-<!--
-    <h2><a id="content" name="content"><%:Station List%></a></h2>
+<style type="text/css">
+.table2 {
+  word-spacing: 100vw;
+}
+</style>
 
-    <fieldset class="cbi-section">
-        <table class="cbi-section-table" style="margin:10px" id="iw-assoclist">
-            <tr class="cbi-section-table-titles">
-                <th class="cbi-section-table-cell"></th>
-                <th class="cbi-section-table-cell"><%:SSID%></th>
-                <th class="cbi-section-table-cell"><%:MAC-Address%></th>
-                <th class="cbi-section-table-cell"><%:IPv4-Address%></th>
-                <th class="cbi-section-table-cell"><%:Signal%></th>
-                <th class="cbi-section-table-cell"><%:Noise%></th>
-                <th class="cbi-section-table-cell"><%:RX Rate%></th>
-                <th class="cbi-section-table-cell"><%:TX Rate%></th>
-            </tr>
-            <tr class="cbi-section-table-row cbi-rowstyle-2">
-                <td class="cbi-value-field" colspan="8">
-                    <em><%:Collecting data...%></em>
-                </td>
-            </tr>
-        </table>
-    </fieldset>
--->
+<h2><a id="content" name="content">Associated Stations</a></h2>
+<%=dme%>
+<fieldset class="cbi-section">
+<table align="left">
+	<thead>
+		<tr style="text-align:left">
+			<th style="width:160px">MAC-Address</th>
+			<th style="width:130px">RSSI - 0/1/2/3</th>
+			<th style="width:100px">BW (T/R)</th>
+			<th style="width:100px">Rate (T/R) Mb/s</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><div class="table2"><%=MAC%></div></td>
+			<td><div class="table2"><%=RSSI%></div></td>
+			<td><div class="table2"><%=BW%></div></td>
+			<td><div class="table2"><%=rate%></div></td>
+		</tr>
+	</tbody>
+</table>
+</fieldset>
 
 <script type="text/javascript">
 function wifi_reload(url) {
