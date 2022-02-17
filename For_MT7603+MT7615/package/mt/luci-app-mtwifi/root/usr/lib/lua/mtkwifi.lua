@@ -114,10 +114,14 @@ end
 
 -- Associated Stations
 dme = mtkwifi.read_pipe("dmesg -c > /dev/null && iwpriv ra0 show stainfo & iwpriv rai0 show stainfo & sleep 1") or "?"
-MAC = mtkwifi.read_pipe("dmesg | grep -ioE '([a-z0-9]{2}:){5}..' 2>/dev/null") or "?"
+MAC = mtkwifi.read_pipe("dmesg | grep -ioE -B 7 '([-0-9]{3}/){3}...' | grep -ioE '([a-z0-9]{2}:){5}..' 2>/dev/null") or "?"
+MAC2 = mtkwifi.read_pipe("dmesg | grep -ioE -B 7 '([-0-9]{3}/){1}.../0' | grep -ioE '([a-z0-9]{2}:){5}..' 2>/dev/null") or "?"
 RSSI = mtkwifi.read_pipe("dmesg | grep -ioE '([-0-9]{3}/){3}...' 2>/dev/null") or "?"
+RSSI2 = mtkwifi.read_pipe("dmesg | grep -ioE '([-0-9]{3}/){1}.../0' | grep -ioE '([-0-9]{3}/){1}...' 2>/dev/null") or "?"
 BW = mtkwifi.read_pipe("dmesg | grep -ioE '([0-9]{2,3}[a-z]{1}/).{3,4}' 2>/dev/null" ) or "?"
+BW2 = mtkwifi.read_pipe("dmesg | grep -ioE -A 3 '([-0-9]{3}/){1}.../0' | grep -ioE '([0-9]{2,3}[a-z]{1})' 2>/dev/null" ) or "?"
 rate = mtkwifi.read_pipe("dmesg | grep -i -B 1 '0%' | grep -ioE '([0-9]{1,4}/[0-9]{1,4})' 2>/dev/null" ) or "?"
+rate2 = mtkwifi.read_pipe("dmesg | grep -i -B 1 '100%' | grep -ioE '(] [1-9]{1,4})' | grep -ioE '([1-9]{1,4})' 2>/dev/null" ) or "?"
 	
 function mtkwifi.load_profile(path, raw)
     local cfgs = {}
