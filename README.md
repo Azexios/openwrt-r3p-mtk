@@ -10,6 +10,7 @@ https://github.com/Azexios/openwrt-r3p-mtk/blob/d2b2dbb9c2f64c667693be61c974762e
 
 You will also need to change the grep regular expressions to display information about connected devices (Associated Stations):  
 https://github.com/Azexios/openwrt-r3p-mtk/blob/95e7067e2dfbee391cd40ef0ec6f9cb92f8edda0/package/mt/luci-app-mtwifi/root/usr/lib/lua/mtkwifi.lua#L115
+For devices on MT7603+MT7615 > https://github.com/Azexios/openwrt-r3p-mtk/tree/main/For_MT7603%2BMT7615
 
 ---
 ### Инструкция по сборке (In Russian)
