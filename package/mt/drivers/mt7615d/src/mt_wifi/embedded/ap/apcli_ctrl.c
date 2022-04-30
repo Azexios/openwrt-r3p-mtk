@@ -1397,7 +1397,7 @@ per mactable entry */
 				apcli_add_pmkid_cache(
 					pAd, pApCliEntry->MlmeAux.Bssid, pmkid,
 					pmk, LEN_PMK, ifIndex, CliIdx);
-				has_pmkid = TRUE;
+				has_pmkid = FALSE;
 			}
 
 			if (has_pmkid == TRUE) {
