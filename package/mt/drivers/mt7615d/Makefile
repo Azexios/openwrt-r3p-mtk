@@ -159,7 +159,6 @@ PKG_KCONFIG:= \
 	EVENT_NOTIFIER_SUPPORT \
 	AIR_MONITOR \
 	WNM_SUPPORT \
-	WIFI_MSI_SUPPORT \
 	WPA3_SUPPORT \
 	OWE_SUPPORT \
 	VENDOR_FEATURE10_SUPPORT \
@@ -186,9 +185,6 @@ define KernelPackage/mt7615d
   CATEGORY:=Kernel modules
   TITLE:=MTK wifi AP driver
   DEPENDS:=@TARGET_ramips
-  KCONFIG:= \
-	CONFIG_PCI_MSI=y \
-	CONFIG_NET_SCH_FQ=y
 ifneq ($(CONFIG_MTK_WHNAT_SUPPORT),)
   FILES:=$(PKG_BUILD_DIR)/mt_wifi_ap/mt_wifi.ko \
 	$(PKG_BUILD_DIR)/mt_wifi/embedded/plug_in/whnat/mt_whnat.ko
