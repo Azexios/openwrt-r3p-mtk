@@ -479,7 +479,7 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
 		end
 		vifs[j].__ssid = cfgs["SSID"..j]
 		vifs[j].__bssid = mtkwifi.read_pipe("iwconfig "..prefix..(j-1).." | grep Point | sed 's/.*Point: //' 2>/dev/null") or "?"
-		vifs[j].__channel = mtkwifi.read_pipe("iwconfig "..prefix..(j-1).." | grep Channel | sed 's/^.*Channel=//;s/Access.*$//' 2>/dev/null") or "?"
+		vifs[j].__channel = mtkwifi.read_pipe("iwconfig "..prefix..(j-1).." | grep -iE '([a-z0-9]{2}:){5}..' | sed 's/^.*Channel=//;s/Access.*$//' 2>/dev/null") or "?"
 		if dbdc then
 			vifs[j].__channel = mtkwifi.token_get(cfgs.Channel, j, 0)
 			vifs[j].__wirelessmode = mtkwifi.token_get(cfgs.WirelessMode, j, 0)
