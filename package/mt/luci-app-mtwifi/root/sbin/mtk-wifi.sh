@@ -1,5 +1,7 @@
 #!/bin/sh
 
+mkdir -p /tmp/mtk/wifi
+
 for dat in $(ls -1 /etc/wireless/mt7615)
 do
 	cp -f /etc/wireless/mt7615/$dat /tmp/mtk/wifi/$dat.last

@@ -47,7 +47,7 @@ function mt7615_vifdown_save(devname)
 		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
 		do
 			if string.match(vif, pre.."[0-9]+") then
-				os.execute("ip link | grep DOWN | grep -o "..vif.." >> /tmp/mtk/vifdown-save")
+				os.execute("ip link | grep -v UP | grep -o "..vif.." >> /tmp/mtk/vifdown-save")
 			end
 		end
 	end

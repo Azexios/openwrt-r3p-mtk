@@ -52,7 +52,7 @@ local cfgs = mtkwifi.load_profile(dev.profile)
 local diff = mtkwifi.diff_profile(dev.profile)
 if next(diff) ~= nil then
 %>
-	<span style="color:red;">(<a href="javascript:location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", dev.devname)%>'">reload</a> to apply changes)</span>
+<span style="color:red;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
 <%
 	end
 %>

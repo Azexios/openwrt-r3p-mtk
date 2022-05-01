@@ -8,6 +8,34 @@
 
   Hua Shao <nossiac@163.com>
 -->
+<%
+local disp = require "luci.dispatcher"
+local path  = disp.context.path
+local request = disp.context.request
+local mtkwifi = require("mtkwifi")
+local devname
+local vifname, vifidx
+local dev = {}
+local vif = {}
+
+if request[4] == "vif_add_view" then
+  devname, vifname = request[5], request[6]
+  local devs = mtkwifi.get_all_devs()
+  dev = devs and devs[devname]
+  vifname = vifname..#dev.vifs
+  vifidx = #dev.vifs + 1
+
+elseif request[4] == "vif_cfg_view" then
+  devname, vifname = request[5], request[6]
+  local devs = mtkwifi.get_all_devs()
+  dev = devs and devs[devname] or nil
+  vif = dev and dev.vifs[vifname] or nil
+  vifidx = vif and vif.vifidx or nil
+end
+
+local cfgs = mtkwifi.load_profile(dev.profile)
+local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
+%>
 
 <style type="text/css">
 @media screen and (max-device-width: 600px) {
@@ -40,7 +68,7 @@
 local diff = mtkwifi.diff_profile(dev.profile)
 if next(diff) ~= nil then
 %>
-<span style="color:red;">(<a href="javascript:location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", dev.devname)%>'">reload</a> to apply changes)</span>
+<span style="color:red;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
 <%
 end
 %>
@@ -134,7 +162,7 @@ end
 		<tr>
 			<td>Key Renewal Interval &ensp;</td>
 			<td>
-			<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /> second(s) (0 ~ 4194303)
+			<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /> second(s) (0 ~ 4194303, default 3600)
 			</td>
 		</tr>
 		</tbody>
