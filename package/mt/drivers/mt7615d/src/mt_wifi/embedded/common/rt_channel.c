@@ -228,6 +228,11 @@ CH_DESC Country_Region21_ChDesc_5GHZ[] = { { 36, 8, CHANNEL_DEFAULT_PROP },
 CH_DESC Country_Region22_ChDesc_5GHZ[] = { { 100, 11, CHANNEL_DEFAULT_PROP },
 					   {} };
 
+CH_DESC Country_Region35_ChDesc_5GHZ[] = { { 36, 8, CHANNEL_DEFAULT_PROP },
+					   { 132, 4, CHANNEL_DEFAULT_PROP },
+					   { 149, 5, CHANNEL_DEFAULT_PROP },
+					   {} };
+
 COUNTRY_REGION_CH_DESC Country_Region_ChDesc_5GHZ[] = {
 	{ REGION_0_A_BAND, Country_Region0_ChDesc_5GHZ },
 	{ REGION_1_A_BAND, Country_Region1_ChDesc_5GHZ },
@@ -252,6 +257,7 @@ COUNTRY_REGION_CH_DESC Country_Region_ChDesc_5GHZ[] = {
 	{ REGION_20_A_BAND, Country_Region20_ChDesc_5GHZ },
 	{ REGION_21_A_BAND, Country_Region21_ChDesc_5GHZ },
 	{ REGION_22_A_BAND, Country_Region22_ChDesc_5GHZ },
+	{ REGION_35_A_BAND, Country_Region35_ChDesc_5GHZ },
 	{}
 };
 
