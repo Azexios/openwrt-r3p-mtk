@@ -2,11 +2,11 @@
 -- Alternative for OpenWrt's /sbin/wifi.
 -- Copyright Not Reserved.
 -- Hua Shao <nossiac@163.com>
+--------------------------------------------------
+-- For MT7615 and driver version 5.1.0.0
+-- https://github.com/Azexios/openwrt-r3p-mtk
 
 package.path = '/lib/wifi/?.lua;'..package.path
-
-local vif_prefix = {"ra", "rai", "rae", "rax", "ray", "raz",
-	"apcli", "apclix", "apclii", "apcliy", "apclie", "apcliz", }
 
 local function esc(x)
    return (x:gsub('%%', '%%%%')
@@ -23,12 +23,26 @@ local function esc(x)
 			:gsub('%?', '%%?'))
 end
 
+-- local vif_prefix = {"ra", "rai", "rae", "rax", "ray", "raz",
+--	"apcli", "apclix", "apclii", "apcliy", "apclie", "apcliz", }
+
+function vif_pre(devname)
+	if devname == "mt7615.1" then
+		return {"ra", "apcli"}
+	elseif devname == "mt7615.2" then
+		return {"rai", "apclii"}
+	else
+		return {"ra", "rai", "apcli", "apclii"}
+	end
+end
+
 function mt7615_vifup_save(devname)
 	local nixio = require("nixio")
 	local mtkwifi = require("mtkwifi")
+	local vif_prefix = vif_pre(devname)
 	nixio.syslog("debug", "mt7615_vifup_save called!")
 	
-	for _, pre in ipairs(vif_prefix) do
+	for _,pre in ipairs(vif_prefix) do
 		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
 		do
 			if string.match(vif, pre.."[0-9]+") then
@@ -38,40 +52,13 @@ function mt7615_vifup_save(devname)
 	end
 end
 
-function mt7615_vifdown_save(devname)
-	local nixio = require("nixio")
-	local mtkwifi = require("mtkwifi")
-	nixio.syslog("debug", "mt7615_vifdown_save called!")
-	
-	for _, pre in ipairs(vif_prefix) do
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
-		do
-			if string.match(vif, pre.."[0-9]+") then
-				os.execute("ip link | grep -v UP | grep -o "..vif.." >> /tmp/mtk/vifdown-save")
-			end
-		end
-	end
-end
-
-function mt7615_vifdown_save_down(devname)
-	local nixio = require("nixio")
-	local mtkwifi = require("mtkwifi")
-	nixio.syslog("debug", "mt7615_vifdown_save_down called!")
-
-	for _,vif in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifdown-save"), "\n"))
-	do
-		nixio.syslog("debug", "mt7615_vifdown_save_down: ifconfig "..vif.." down")
-		os.execute("ifconfig "..vif.." down")
-	end	
-	os.execute("rm -rf /tmp/mtk/vifdown-save")
-end
-
 function mt7615_ifup_save(devname)
 	local nixio = require("nixio")
 	local mtkwifi = require("mtkwifi")
+	local vif_prefix = vif_pre(devname)
 	nixio.syslog("debug", "mt7615_ifup_save called!")
 
-	for _, pre in ipairs(vif_prefix) do
+	for _,pre in ipairs(vif_prefix) do
 		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
 		do
 			if string.match(vif, pre.."[0-9]+") then
@@ -79,25 +66,27 @@ function mt7615_ifup_save(devname)
 			end
 		end
 	end
-
+	
+	os.execute("> /tmp/mtk/ifup-save")
 	for _,ifs in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/if-save"), "\n")) do
-		rr = "&&"
-		os.execute("ifstatus "..ifs.." | grep '.up.: true,' | grep -q '.*' "..rr.." echo "..ifs.." >> /tmp/mtk/ifup-save")		
+		os.execute("ifstatus "..ifs.." | grep -q '.up.: true,' && echo "..ifs.." >> /tmp/mtk/ifup-save")		
 	end
 		
 end
 
-function mt7615_ifup_save_up(devname)
+function mt7615_ifup_up(devname)
 	local mtkwifi = require("mtkwifi")
 	local nixio = require("nixio")
-	nixio.syslog("debug", "mt7615_ifup_save_up called!")
+	nixio.syslog("debug", "mt7615_ifup_up called!")
 	
 	for _,ifs in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/ifup-save"), "\n")) do
-		nixio.syslog("debug", "mt7615_ifup_save_up: ifup "..ifs.."")
-		os.execute("ifup "..ifs.."")
+		nixio.syslog("debug", "mt7615_ifup_up: ifup "..ifs)
+		os.execute("ifup "..ifs)
 	end
+	
 	os.execute("rm -rf /tmp/mtk/if-save")
 	os.execute("rm -rf /tmp/mtk/ifup-save")
+	os.execute("rm -rf /tmp/mtk/vifup-save")
 end
 
 function mt7615_ifup_down(devname)
@@ -106,160 +95,67 @@ function mt7615_ifup_down(devname)
 	nixio.syslog("debug", "mt7615_ifup_down called!")
 	
 	for _,ifs in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/ifup-save"), "\n")) do
-		nixio.syslog("debug", "mt7615_ifup_down: ifdown "..ifs.."")
-		os.execute("ifdown "..ifs.."")
+		nixio.syslog("debug", "mt7615_ifup_down: ifdown "..ifs)
+		os.execute("ifdown "..ifs)
 	end
 end
 
 function mt7615_up(devname)
 	local nixio = require("nixio")
 	local mtkwifi = require("mtkwifi")
-
-	nixio.syslog("debug", "mt7615_up called!")
-
-	local devs, l1parser = mtkwifi.__get_l1dat()
-	-- l1 profile present, good!
-	if l1parser and devs then
-		dev = devs.devname_ridx[devname]
-		if not dev then
-			nixio.syslog("err", "mt7615_up: dev "..devname.." not found!")
-			return
-		end
-		-- we have to bring up main_ifname first, main_ifname will create all other vifs.
-		if mtkwifi.exists("/sys/class/net/"..dev.main_ifname) then
-			nixio.syslog("debug", "mt7615_up: ifconfig "..dev.main_ifname.." up")
-			os.execute("ifconfig "..dev.main_ifname.." up")
-		else
-			nixio.syslog("err", "mt7615_up: main_ifname "..dev.main_ifname.." missing, quit!")
-			return
-		end
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
-		do
-			if vif ~= dev.main_ifname and
-			(  string.match(vif, esc(dev.ext_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.apcli_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.wds_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.mesh_ifname).."[0-9]+"))
-			then
-				nixio.syslog("debug", "mt7615_up: ifconfig "..vif.."0 up")
-				os.execute("ifconfig "..vif.." up")
-			-- else nixio.syslog("debug", "mt7615_up: skip "..vif..", prefix not match "..pre)
-			end
-		end
-	elseif mtkwifi.exists("/etc/wireless/mt7615/"..devname..".dat") then
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifup-save"), "\n"))
-		do
-			os.execute("ifconfig "..vif.." up")
-			nixio.syslog("debug", "mt7615_up: ifconfig "..vif.." up")
-			-- else nixio.syslog("debug", "mt7615_up: skip "..vif..", prefix not match "..pre)
-		end
-	else nixio.syslog("debug", "mt7615_up: skip "..devname..", config not exist")
-	end
-
-	os.execute(" rm -rf /tmp/mtk/vifup-save")
-	os.execute(" rm -rf /tmp/mtk/wifi/mt7615*.need_reload")
-end
-
-function mt7615_up_r(devname)
-	local nixio = require("nixio")
-	local mtkwifi = require("mtkwifi")
-
-	nixio.syslog("debug", "mt7615_up_r called!")
-
-	local devs, l1parser = mtkwifi.__get_l1dat()
-	-- l1 profile present, good!
-	if l1parser and devs then
-		dev = devs.devname_ridx[devname]
-		if not dev then
-			nixio.syslog("err", "mt7615_up: dev "..devname.." not found!")
-			return
-		end
-		-- we have to bring up main_ifname first, main_ifname will create all other vifs.
-		if mtkwifi.exists("/sys/class/net/"..dev.main_ifname) then
-			nixio.syslog("debug", "mt7615_up: ifconfig "..dev.main_ifname.." up")
-			os.execute("ifconfig "..dev.main_ifname.." up")
-		else
-			nixio.syslog("err", "mt7615_up: main_ifname "..dev.main_ifname.." missing, quit!")
-			return
-		end
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
-		do
-			if vif ~= dev.main_ifname and
-			(  string.match(vif, esc(dev.ext_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.apcli_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.wds_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.mesh_ifname).."[0-9]+"))
-			then
-				nixio.syslog("debug", "mt7615_up: ifconfig "..vif.."0 up")
-				os.execute("ifconfig "..vif.." up")
-			-- else nixio.syslog("debug", "mt7615_up: skip "..vif..", prefix not match "..pre)
-			end
-		end
-	elseif mtkwifi.exists("/etc/wireless/mt7615/"..devname..".dat") then
-		for _, pre in ipairs(vif_prefix) do
-			-- we have to bring up root vif first, root vif will create all other vifs.
-			if mtkwifi.exists("/sys/class/net/"..pre.."0") then
-				nixio.syslog("debug", "mt7615_up: ifconfig "..pre.."0 up")
-				os.execute("ifconfig "..pre.."0 up")
-			end
-
-			for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
-			do
-				-- nixio.syslog("debug", "mt7615_up: navigate "..pre)
-				if string.match(vif, pre.."[1-9]+") then
-					nixio.syslog("debug", "mt7615_up: ifconfig "..vif.." up")
-					os.execute("ifconfig "..vif.." up")
-				-- else nixio.syslog("debug", "mt7615_up: skip "..vif..", prefix not match "..pre)
-				end
-			end
-		end
-	else nixio.syslog("debug", "mt7615_up: skip "..devname..", config not exist")
-	end
-
-	os.execute(" rm -rf /tmp/mtk/vifup-save")
-	os.execute(" rm -rf /tmp/mtk/wifi/mt7615*.need_reload")
-end
-
-function mt7615_down(devname)
-	local nixio = require("nixio")
-	local mtkwifi = require("mtkwifi")
-	nixio.syslog("debug", "mt7615_down called!")
 	
-
-	local devs, l1parser = mtkwifi.__get_l1dat()
-	-- l1 profile present, good!
-	if l1parser and devs then
-		dev = devs.devname_ridx[devname]
-		if not dev then
-			nixio.syslog("err", "mt7615_down: dev "..devname.." not found!")
-			return
+	nixio.syslog("debug", "mt7615_up called!")
+	
+	if not devname then
+		-- we have to bring up root vif first, root vif will create all other vifs.
+		mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(ra[0-9])|apcli0' && echo 1 2>/dev/null")
+		mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(rai[0-9])|apclii0' && echo 1 2>/dev/null")
+		
+		if mt2 == "1\n" then
+			nixio.syslog("debug", "mt7615_up_r: ifconfig ra0 up")
+			os.execute("ifconfig ra0 up")
+		end		
+		if mt5 == "1\n" then
+			nixio.syslog("debug", "mt7615_up_r: ifconfig rai0 up")
+			os.execute("ifconfig rai0 up")
 		end
-
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("ls /sys/class/net"), "\n"))
-		do
-			if vif == dev.main_ifname
-			or string.match(vif, esc(dev.ext_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.apcli_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.wds_ifname).."[0-9]+")
-			or string.match(vif, esc(dev.mesh_ifname).."[0-9]+")
-			then
-				nixio.syslog("debug", "mt7615_down: ifconfig "..vif.." down")
-				os.execute("ifconfig "..vif.." down")
-			-- else nixio.syslog("debug", "mt7615_down: skip "..vif..", prefix not match "..pre)
-			end
-		end
-	elseif mtkwifi.exists("/etc/wireless/mt7615/"..devname..".dat") then
-		for _,vif in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifup-save"), "\n"))
-		do
-			nixio.syslog("debug", "mt7615_down: ifconfig "..vif.." down")
-			os.execute("ifconfig "..vif.." down")
-		-- else nixio.syslog("debug", "mt7615_down: skip "..vif..", prefix not match "..pre)
-		end
-
-	else nixio.syslog("debug", "mt7615_down: skip "..devname..", config not exist")
 	end
 
-	os.execute(" rm -rf /tmp/mtk/wifi/mt7615*.need_reload")
+	for _,vif in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifup-save"), "\n"))
+	do
+		nixio.syslog("debug", "mt7615_up: ifconfig "..vif.." up")
+		os.execute("ifconfig "..vif.." up")
+	end
+end
+
+function mt7615_vifup_down(devname)
+	local nixio = require("nixio")
+	local mtkwifi = require("mtkwifi")
+	nixio.syslog("debug", "mt7615_vifup_down called!")
+
+	for _,vif in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifup-save"), "\n"))
+	do
+		nixio.syslog("debug", "mt7615_vifup_down: ifconfig "..vif.." down")
+		os.execute("ifconfig "..vif.." down")
+	end
+end
+
+function mt7615_down_r()
+	local nixio = require("nixio")
+	local mtkwifi = require("mtkwifi")
+	nixio.syslog("debug", "mt7615_down_r called!")
+	
+	mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q ra0 && echo 1 2>/dev/null")
+	mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q rai0 && echo 1 2>/dev/null")
+	
+	if mt2 ~= "1\n" then
+		nixio.syslog("debug", "mt7615_down_r: ifconfig ra0 down")
+		os.execute("ifconfig ra0 down")
+	end		
+	if mt5 ~= "1\n" then
+		nixio.syslog("debug", "mt7615_down_r: ifconfig rai0 down")
+		os.execute("ifconfig rai0 down")
+	end
 end
 
 function mt7615_reload(devname)
@@ -269,25 +165,26 @@ function mt7615_reload(devname)
 	mt7615_vifup_save(devname)
 	mt7615_ifup_save(devname)
 	mt7615_ifup_down(devname)
-	mt7615_down(devname)
+	mt7615_vifup_down(devname)
 	mt7615_up(devname)
-	mt7615_ifup_save_up(devname)
+	mt7615_ifup_up(devname)
 end
 
 function mt7615_restart(devname)
 	local nixio = require("nixio")
 	nixio.syslog("debug", "mt7615_restart called!")
 	
-	mt7615_vifup_save(devname)
-	mt7615_vifdown_save(devname)
-	mt7615_ifup_save(devname)
+	mt7615_vifup_save()
+	mt7615_ifup_save()
 	mt7615_ifup_down(devname)
-	mt7615_down(devname)
+	mt7615_vifup_down(devname)
+	nixio.syslog("debug", "mt7615_restart: rmmod mt_wifi")
 	os.execute("rmmod mt_wifi")
+	nixio.syslog("debug", "mt7615_restart: modprobe mt_wifi")
 	os.execute("modprobe mt_wifi")
-	mt7615_up_r(devname)
-	mt7615_ifup_save_up(devname)
-	mt7615_vifdown_save_down(devname)
+	mt7615_up()
+	mt7615_down_r()
+	mt7615_ifup_up(devname)
 end
 
 function mt7615_reset(devname)

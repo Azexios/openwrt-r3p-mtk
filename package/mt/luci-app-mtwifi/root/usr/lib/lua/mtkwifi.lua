@@ -13,6 +13,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ --------------------------------------------------
+ 
+ For MT7615 and driver version 5.1.0.0
+ https://github.com/Azexios/openwrt-r3p-mtk
 ]]
 
 local mtkwifi = {}
@@ -112,13 +116,79 @@ function mtkwifi.read_pipe(pipe)
 	return txt
 end
 
--- Associated Stations
-dme = mtkwifi.read_pipe("dmesg -c > /dev/null && iwpriv ra0 show stainfo & iwpriv rai0 show stainfo & sleep 1") or "?"
-MAC = mtkwifi.read_pipe("dmesg | grep -ioE '([a-z0-9]{2}:){5}..' 2>/dev/null") or "?"
-RSSI = mtkwifi.read_pipe("dmesg | grep -ioE '([-0-9]{3}/){3}...' 2>/dev/null") or "?"
-BW = mtkwifi.read_pipe("dmesg | grep -ioE '([0-9]{2,3}[a-z]{1}/).{3,4}' 2>/dev/null" ) or "?"
-rate = mtkwifi.read_pipe("dmesg | grep -i -B 1 '0%' | grep -ioE '([0-9]{1,4}/[0-9]{1,4})' 2>/dev/null" ) or "?"
-	
+function mtkwifi.band(mode)
+    local i = tonumber(mode)
+    if i == 0
+    or i == 1
+    or i == 9 
+    or i == 10 then
+        return "2.4G"
+    else
+        return "5G"
+    end
+end
+
+mtkwifi.ChannelList_5G_All = {
+    {channel=0,  text="Channel 0 (Auto)", region={}},
+    {channel= 36, text="Channel  36 (5.180 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 40, text="Channel  40 (5.200 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 44, text="Channel  44 (5.220 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 48, text="Channel  48 (5.240 GHz)", region={[0]=1, [1]=1, [2]=1, [6]=1, [7]=1, [9]=1, [10]=1, [11]=1, [12]=1, [13]=1, [14]=1, [17]=1, [18]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 52, text="Channel  52 (5.260 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 56, text="Channel  56 (5.280 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 60, text="Channel  60 (5.300 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel= 64, text="Channel  64 (5.320 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [7]=1, [8]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [16]=1, [18]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel=100, text="Channel 100 (5.500 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=104, text="Channel 104 (5.520 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=108, text="Channel 108 (5.540 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=112, text="Channel 112 (5.560 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=116, text="Channel 116 (5.580 GHz)", region={[1]=1, [7]=1, [9]=1, [11]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=120, text="Channel 120 (5.600 GHz)", region={[1]=1, [7]=1, [11]=1, [12]=1, [13]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=124, text="Channel 124 (5.620 GHz)", region={[1]=1, [7]=1, [12]=1, [13]=1, [19]=1, [20]=1, [21]=1, [22]=1}},
+    {channel=128, text="Channel 128 (5.640 GHz)", region={[1]=1, [7]=1, [12]=1, [13]=1, [19]=1, [21]=1, [22]=1}},
+    {channel=132, text="Channel 132 (5.660 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [35]=1}},
+    {channel=136, text="Channel 136 (5.680 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [35]=1}},
+    {channel=140, text="Channel 140 (5.700 GHz)", region={[1]=1, [7]=1, [9]=1, [12]=1, [13]=1, [14]=1, [18]=1, [19]=1, [21]=1, [22]=1, [35]=1}},
+    {channel=144, text="Channel 144 (5.720 GHz)", region={[12]=1, [13]=1, [14]=1, [35]=1}},
+    {channel=149, text="Channel 149 (5.745 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel=153, text="Channel 153 (5.765 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel=157, text="Channel 157 (5.785 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel=161, text="Channel 161 (5.805 GHz)", region={[0]=1, [3]=1, [4]=1, [5]=1, [7]=1, [9]=1, [10]=1, [11]=1, [13]=1, [14]=1, [15]=1, [16]=1, [17]=1, [19]=1, [20]=1, [21]=1, [35]=1}},
+    {channel=165, text="Channel 165 (5.825 GHz)", region={[0]=1, [4]=1, [7]=1, [9]=1, [10]=1, [13]=1, [14]=1, [15]=1, [16]=1, [35]=1}},
+    {channel=169, text="Channel 169 (5.845 GHz)", region={[15]=1}},
+    {channel=173, text="Channel 173 (5.865 GHz)", region={[15]=1}},
+}
+
+mtkwifi.ChannelList_2G_All = {
+    {channel=0, text="Channel 0 (Auto)", region={}},
+    {channel= 1, text="Channel  1 (2412 GHz)", region={[0]=1, [1]=1, [5]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 2, text="Channel  2 (2417 GHz)", region={[0]=1, [1]=1, [5]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 3, text="Channel  3 (2422 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 4, text="Channel  4 (2427 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 5, text="Channel  5 (2432 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 6, text="Channel  6 (2437 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 7, text="Channel  7 (2442 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 8, text="Channel  8 (2447 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel= 9, text="Channel  9 (2452 GHz)", region={[0]=1, [1]=1, [5]=1, [6]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel=10, text="Channel 10 (2457 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel=11, text="Channel 11 (2462 GHz)", region={[0]=1, [1]=1, [2]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel=12, text="Channel 12 (2467 GHz)", region={[1]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel=13, text="Channel 13 (2472 GHz)", region={[1]=1, [3]=1, [5]=1, [7]=1, [31]=1, [32]=1, [33]=1}},
+    {channel=14, text="Channel 14 (2477 GHz)", region={[4]=1, [5]=1, [31]=1, [33]=1}},
+}
+
+mtkwifi.ChannelList_5G_2nd_80MHZ_ALL = {
+    {channel=36, text="Ch36(5.180 GHz) - Ch48(5.240 GHz)", chidx=2},
+    {channel=52, text="Ch52(5.260 GHz) - Ch64(5.320 GHz)", chidx=6},
+    {channel=-1, text="Channel between 64 100",  chidx=-1},
+    {channel=100, text="Ch100(5.500 GHz) - Ch112(5.560 GHz)", chidx=10},
+    {channel=112, text="Ch116(5.580 GHz) - Ch128(5.640 GHz)", chidx=14},
+    {channel=-1, text="Channel between 128 132", chidx=-1},
+    {channel=132, text="Ch132(5.660 GHz) - Ch144(5.720 GHz)", chidx=18},
+    {channel=-1, text="Channel between 144 149", chidx=-1},
+    {channel=149, text="Ch149(5.745 GHz) - Ch161(5.805 GHz)", chidx=22},
+}
+
 function mtkwifi.load_profile(path, raw)
 	local cfgs = {}
 	local content
@@ -264,7 +334,7 @@ local DevicePropertyMap = {
 	{device="MT7612", band={"2", "8", "11", "14", "15"}},
 	{device="MT7662", band={"2", "8", "11", "14", "15"}},
 	-- Mix
-	{device="MT7615", band={"1", "2", "3", "8", "9", "10", "13", "14"}}
+	{device="MT7615", band={"0", "1", "2", "8", "9", "10", "14"}}
 }
 
 local AuthModeList = {
@@ -292,13 +362,11 @@ local WpsEnableAuthModeList = {
 local ApCliAuthModeList = {
 	"Disable",
 	"OPEN",
-	"OWE",
 	"SHARED",
 	"WPAPSK",
 	"WPA2PSK",
 	"WPA3PSK",
-	"WPAPSKWPA2PSK",
-	"WPA2PSKWPA3PSK",
+	"OWE",
 	-- "WPA",
 	-- "WPA2",
 	-- "WPAWPA2",
@@ -369,47 +437,24 @@ function mtkwifi.token_get(str, n, v)
 end
 
 function mtkwifi.search_dev_and_profile_orig()
-	local dir = io.popen("ls /etc/wireless/")
-	if not dir then return end
 	local result = {}
-	-- case 1: mt76xx.dat (best)
-	-- case 2: mt76xx.n.dat (multiple card of same dev)
-	-- case 3: mt76xx.n.nG.dat (case 2 plus dbdc and multi-profile, bloody hell....)
-	for line in dir:lines() do
-		-- mtkwifi.debug("debug", "scan "..line)
-		local tmp = io.popen("find /etc/wireless/"..line.." -type f -name \"*.dat\"")
-		for datfile in tmp:lines() do
-			-- mtkwifi.debug("debug", "test "..datfile)
-
-			repeat do
-			-- for case 1
-			local devname = string.match(datfile, "("..line..").dat")
-			if devname then
-				result[devname] = datfile
-				-- mtkwifi.debug("debug", "yes "..devname.."="..datfile)
-				break
-			end
-			-- for case 2
-			local devname = string.match(datfile, "("..line.."%.%d)%.dat")
-			if devname then
-				result[devname] = datfile
-				-- mtkwifi.debug("debug", "yes "..devname.."="..datfile)
-				break
-			end
-			-- for case 3
-			local devname = string.match(datfile, "("..line.."%.%d%.%dG)%.dat")
-			if devname then
-				result[devname] = datfile
-				-- mtkwifi.debug("debug", "yes "..devname.."="..datfile)
-				break
-			end
-			end until true
+	local dat = {"/etc/wireless/mt7615/mt7615.1.dat", "/etc/wireless/mt7615/mt7615.2.dat"}
+	
+	for _,datfile in ipairs(dat) do
+		-- print("debug", "test "..datfile)
+		repeat do
+		local devname = string.match(datfile, "(mt7615%.%d)%.dat")
+		if devname then
+			result[devname] = datfile
+			-- print("debug", "yes "..devname.."="..datfile)
+			break
 		end
+		end until true
 	end
-
-	for k,v in pairs(result) do
-		mtkwifi.debug("debug", "search_dev_and_profile_orig: "..k.."="..v)
-	end
+	
+--	for k,v in pairs(result) do
+--		print("debug", "search_dev_and_profile_orig: "..k.."="..v)
+--	end
 
 	return result
 end
@@ -433,7 +478,7 @@ function mtkwifi.search_dev_and_profile_l1()
 	end
 
 	for k,v in pairs(result) do
-		mtkwifi.debug("debug", "search_dev_and_profile_l1: "..k.."="..v)
+		-- nixio.syslog("debug", "search_dev_and_profile_l1: "..k.."="..v)
 	end
 
 	return result
@@ -501,6 +546,8 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
 		vifs[j].__radius_port = mtkwifi.token_get(cfgs.RADIUS_Port, j, 0)
 		vifs[j].__wepkey_id = mtkwifi.token_get(cfgs.DefaultKeyID, j, 0)
 		vifs[j].__wscconfmode = mtkwifi.token_get(cfgs.WscConfMode, j, 0)
+		vifs[j].__mfpc = mtkwifi.token_get(cfgs.PMFMFPC, j, 0)
+		vifs[j].__mfpr = mtkwifi.token_get(cfgs.PMFMFPR, j, 0)
 		vifs[j].__wepkeys = {
 			cfgs["Key"..j.."Str1"],
 			cfgs["Key"..j.."Str2"],
@@ -510,12 +557,12 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
 		vifs[j].__wpapsk = cfgs["WPAPSK"..j]
 
 		-- VoW
-		vifs[j].__atc_tp	 = mtkwifi.token_get(cfgs.VOW_Rate_Ctrl_En,	j, 0)
-		vifs[j].__atc_min_tp = mtkwifi.token_get(cfgs.VOW_Group_Min_Rate,  j, "")
-		vifs[j].__atc_max_tp = mtkwifi.token_get(cfgs.VOW_Group_Max_Rate,  j, "")
-		vifs[j].__atc_at	 = mtkwifi.token_get(cfgs.VOW_Airtime_Ctrl_En, j, 0)
-		vifs[j].__atc_min_at = mtkwifi.token_get(cfgs.VOW_Group_Min_Ratio, j, "")
-		vifs[j].__atc_max_at = mtkwifi.token_get(cfgs.VOW_Group_Max_Ratio, j, "")
+--		vifs[j].__atc_tp	 = mtkwifi.token_get(cfgs.VOW_Rate_Ctrl_En,	j, 0)
+--		vifs[j].__atc_min_tp = mtkwifi.token_get(cfgs.VOW_Group_Min_Rate,  j, "")
+--		vifs[j].__atc_max_tp = mtkwifi.token_get(cfgs.VOW_Group_Max_Rate,  j, "")
+--		vifs[j].__atc_at	 = mtkwifi.token_get(cfgs.VOW_Airtime_Ctrl_En, j, 0)
+--		vifs[j].__atc_min_at = mtkwifi.token_get(cfgs.VOW_Group_Min_Ratio, j, "")
+--		vifs[j].__atc_max_at = mtkwifi.token_get(cfgs.VOW_Group_Max_Ratio, j, "")
 
 		-- TODO index by vifname
 		vifs[vifs[j].vifname] = vifs[j]
@@ -564,12 +611,12 @@ end
 function mtkwifi.get_all_devs()
 	local devs = {}
 	local i = 1 -- dev idx
-	local profiles = mtkwifi.search_dev_and_profile()
+	local profiles = mtkwifi.search_dev_and_profile_orig()
 	local wpa_support = 0
 	local wapi_support = 0
-
+	
 	for devname,profile in pairs(profiles) do
-		mtkwifi.debug("debug", "checking "..profile)
+		-- nixio.syslog("debug", "checking "..profile)
 
 		local fd = io.open(profile,"r")
 		if not fd then
@@ -630,18 +677,6 @@ function mtkwifi.get_all_devs()
 			devs[i].WEP_Enc_List = WEP_Enc_List
 			devs[i].Channel = tonumber(cfgs.Channel)
 			devs[i].DBDC_MODE = tonumber(cfgs.DBDC_MODE)
-
-			if cfgs.MUTxRxEnable == "1" and cfgs.MuMimoDlEnable == "1" and cfgs.MuMimoUlEnable == "0" then
-				devs[i].__mimo = "1"
-			elseif cfgs.MUTxRxEnable == "0" and cfgs.MuMimoDlEnable == "0" and cfgs.MuMimoUlEnable == "0" then
-				devs[i].__mimo = "0"
-			end
-			
-			if cfgs.ITxBfEn == "1" and cfgs.ETxBfEnCond == "1" and cfgs.ITxBfEnCond == "1" then
-				devs[i].__beam = "1"
-			elseif cfgs.ITxBfEn == "0" and cfgs.ETxBfEnCond == "0" and cfgs.ITxBfEnCond == "0" then
-				devs[i].__beam = "0"
-			end
 
 			if cfgs.HT_BW == "0" or not cfgs.HT_BW then
 				devs[i].__bw = "20"

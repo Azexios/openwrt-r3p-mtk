@@ -7,6 +7,10 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
+	--------------------------------------------------
+ 
+	For MT7615 and driver version 5.1.0.0
+	https://github.com/Azexios/openwrt-r3p-mtk
 -->
 
 <%
@@ -28,6 +32,19 @@ local cfgs = mtkwifi.load_profile(dev.profile)
 %>
 
 <style type="text/css">
+table {
+  border-collapse:separate;
+  border-spacing:9px 5px
+}
+.mh {
+ color:#1976D7;
+ font-weight:900;
+ font-size:1.1rem;
+}
+.he1 {
+ margin-left:8px;
+ white-space:pre;
+}
 @media screen and (max-device-width: 600px) {
  header .pull-right {
   flex:none;
@@ -37,12 +54,19 @@ local cfgs = mtkwifi.load_profile(dev.profile)
   margin:.2em 5px .2em auto;
   padding:0
  }
+ input,
+ textarea,
+ select,
+ .cbi-dropdown > ul > li {
+  font-size:1em!important;
+  height:30px;
+ }
 }
 </style>
 
 <div id="loading" style="margin-top: 1em; display: none;">
 <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" />
-	&nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
+	&nbsp;&nbsp;&nbsp; Please waiting......
 </div>
 
 <form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg", devname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="false">
@@ -63,14 +87,17 @@ if next(diff) ~= nil then
 			<tr>
 				<td>Mode</td>
 				<td>
-					<select style="width:auto" name="WirelessMode">
-						<option value="1" <% if cfgs.WirelessMode == "1" then %> selected="selected"<% end%>>1 - B only</option>
-						<option value="2" <% if cfgs.WirelessMode == "2" then %> selected="selected"<% end%>>2 - A only in 5G</option>
-						<option value="3" <% if cfgs.WirelessMode == "3" then %> selected="selected"<% end%>>3 - B/G mixed</option>
-						<option value="8" <% if cfgs.WirelessMode == "8" then %> selected="selected"<% end%>>8 - A/AN mixed 5G</option>
-						<option value="9" <% if cfgs.WirelessMode == "9" then %> selected="selected"<% end%>>9 - B/G/N mixed</option>
-						<option value="10" <% if cfgs.WirelessMode == "10" then %> selected="selected"<% end%>>10 - G/N mixed</option>
-						<option value="14" <% if cfgs.WirelessMode == "14" then %> selected="selected"<% end%>>14 - A/AN/AC mixed 5G</option>
+					<select style="width:auto" name="WirelessMode" id="WirelessMode" onchange="WirelessMode_onchange(this.options[this.options.selectedIndex].value)">
+						<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+							<option value="2" <% if cfgs.WirelessMode == "2" then %> selected="selected"<% end%>>2 - A only in 5G</option>
+							<option value="8" <% if cfgs.WirelessMode == "8" then %> selected="selected"<% end%>>8 - A/AN mixed 5G</option>
+							<option value="14" <% if cfgs.WirelessMode == "14" then %> selected="selected"<% end%>>14 - A/AN/AC mixed 5G</option>
+						<% else %>
+							<option value="0" <% if cfgs.WirelessMode == "0" then %> selected="selected"<% end%>>0 - B/G mixed</option>
+							<option value="1" <% if cfgs.WirelessMode == "1" then %> selected="selected"<% end%>>1 - B only</option>
+							<option value="9" <% if cfgs.WirelessMode == "9" then %> selected="selected"<% end%>>9 - B/G/N mixed</option>
+							<option value="10" <% if cfgs.WirelessMode == "10" then %> selected="selected"<% end%>>10 - G/N mixed</option>
+						<% end %>
 					</select>
 				</td>
 				<td></td>
@@ -83,56 +110,36 @@ if next(diff) ~= nil then
 				<% if cfgs.ApCliEnable == "1" then %>
 					<select style="width:auto" name="Channel" disabled="disabled">
 						<option selected="selected">APClient/Repeater Mode</option>
-				<% else %>
-					<select style="width:auto" name="Channel">
-						<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
-							<option value="0" <% if cfgs.Channel == "0" then %> selected="selected"<% end%>>Channel 0 (Auto)</option>
-							<option value="36" <% if cfgs.Channel == "36" then %> selected="selected"<% end%>>Channel 36 (5.180 GHz)</option>
-							<option value="40" <% if cfgs.Channel == "40" then %> selected="selected"<% end%>>Channel 40 (5.200 GHz)</option>
-							<option value="44" <% if cfgs.Channel == "44" then %> selected="selected"<% end%>>Channel 44 (5.220 GHz)</option>
-							<option value="48" <% if cfgs.Channel == "48" then %> selected="selected"<% end%>>Channel 48 (5.240 GHz)</option>
-							<option value="52" <% if cfgs.Channel == "52" then %> selected="selected"<% end%>>Channel 52 (5.260 GHz)</option>
-							<option value="56" <% if cfgs.Channel == "56" then %> selected="selected"<% end%>>Channel 56 (5.280 GHz)</option>
-							<option value="60" <% if cfgs.Channel == "60" then %> selected="selected"<% end%>>Channel 60 (5.300 GHz)</option>
-							<option value="64" <% if cfgs.Channel == "64" then %> selected="selected"<% end%>>Channel 64 (5.320 GHz)</option>
-							<option value="100" <% if cfgs.Channel == "100" then %> selected="selected"<% end%>>Channel 100 (5.500 GHz)</option>
-							<option value="104" <% if cfgs.Channel == "104" then %> selected="selected"<% end%>>Channel 104 (5.520 GHz)</option>
-							<option value="108" <% if cfgs.Channel == "108" then %> selected="selected"<% end%>>Channel 108 (5.540 GHz)</option>
-							<option value="112" <% if cfgs.Channel == "112" then %> selected="selected"<% end%>>Channel 112 (5.560 GHz)</option>
-							<option value="116" <% if cfgs.Channel == "116" then %> selected="selected"<% end%>>Channel 116 (5.580 GHz)</option>
-							<option value="120" <% if cfgs.Channel == "120" then %> selected="selected"<% end%>>Channel 120 (5.600 GHz)</option>
-							<option value="124" <% if cfgs.Channel == "124" then %> selected="selected"<% end%>>Channel 124 (5.620 GHz)</option>
-							<option value="128" <% if cfgs.Channel == "128" then %> selected="selected"<% end%>>Channel 128 (5.640 GHz)</option>
-							<option value="132" <% if cfgs.Channel == "132" then %> selected="selected"<% end%>>Channel 132 (5.660 GHz)</option>
-							<option value="136" <% if cfgs.Channel == "136" then %> selected="selected"<% end%>>Channel 136 (5.680 GHz)</option>
-							<option value="140" <% if cfgs.Channel == "140" then %> selected="selected"<% end%>>Channel 140 (5.700 GHz)</option>
-							<option value="144" <% if cfgs.Channel == "144" then %> selected="selected"<% end%>>Channel 144 (5.720 GHz)</option>
-							<option value="149" <% if cfgs.Channel == "149" then %> selected="selected"<% end%>>Channel 149 (5.745 GHz)</option>
-							<option value="153" <% if cfgs.Channel == "153" then %> selected="selected"<% end%>>Channel 153 (5.765 GHz)</option>
-							<option value="157" <% if cfgs.Channel == "157" then %> selected="selected"<% end%>>Channel 157 (5.785 GHz)</option>
-							<option value="161" <% if cfgs.Channel == "161" then %> selected="selected"<% end%>>Channel 161 (5.805 GHz)</option>
-							<option value="165" <% if cfgs.Channel == "165" then %> selected="selected"<% end%>>Channel 165 (5.825 GHz)</option>
-							<option value="169" <% if cfgs.Channel == "169" then %> selected="selected"<% end%>>Channel 169 (5.845 GHz)</option>
-							<option value="173" <% if cfgs.Channel == "173" then %> selected="selected"<% end%>>Channel 173 (5.865 GHz)</option>
-						<% else %>
-							<option value="0" <% if cfgs.Channel == "0" then %> selected="selected"<% end%>>Channel 0 (Auto )</option>
-							<option value="1" <% if cfgs.Channel == "1" then %> selected="selected"<% end%>>Channel 1 (2412 GHz)</option>
-							<option value="2" <% if cfgs.Channel == "2" then %> selected="selected"<% end%>>Channel 2 (2417 GHz)</option>
-							<option value="3" <% if cfgs.Channel == "3" then %> selected="selected"<% end%>>Channel 3 (2422 GHz)</option>
-							<option value="4" <% if cfgs.Channel == "4" then %> selected="selected"<% end%>>Channel 4 (2427 GHz)</option>
-							<option value="5" <% if cfgs.Channel == "5" then %> selected="selected"<% end%>>Channel 5 (2432 GHz)</option>
-							<option value="6" <% if cfgs.Channel == "6" then %> selected="selected"<% end%>>Channel 6 (2437 GHz)</option>
-							<option value="7" <% if cfgs.Channel == "7" then %> selected="selected"<% end%>>Channel 7 (2442 GHz)</option>
-							<option value="8" <% if cfgs.Channel == "8" then %> selected="selected"<% end%>>Channel 8 (2447 GHz)</option>
-							<option value="9" <% if cfgs.Channel == "9" then %> selected="selected"<% end%>>Channel 9 (2452 GHz)</option>
-							<option value="10" <% if cfgs.Channel == "10" then %> selected="selected"<% end%>>Channel 10 (2457 GHz)</option>
-							<option value="11" <% if cfgs.Channel == "11" then %> selected="selected"<% end%>>Channel 11 (2462 GHz)</option>
-							<option value="12" <% if cfgs.Channel == "12" then %> selected="selected"<% end%>>Channel 12 (2467 GHz)</option>
-							<option value="13" <% if cfgs.Channel == "13" then %> selected="selected"<% end%>>Channel 13 (2472 GHz)</option>
-							<option value="14" <% if cfgs.Channel == "14" then %> selected="selected"<% end%>>Channel 14 (2477 GHz)</option>
-						<% end %>
-				<% end %>>
 					</select>
+				<% else %>
+					<select style="width:auto; min-width:185px;" name="Channel" id="Channel" onchange="ch_onchange(this.options[this.options.selectedIndex].value)"></select>
+				<% end %>
+				</td>
+			</tr>
+			<% end %>
+			<% if cfgs.ACSCheckTime then %>
+			<tr id="auto_ch" style="display:none;">
+				<td>Choosing the Channel</td>
+				<td>
+					<select name="ACSCheckTime" style="width:auto">
+						<option value="0" <% if cfgs.ACSCheckTime == "0" then %> selected="selected"<% end %>>When turned on</option>
+						<option value="1" <% if cfgs.ACSCheckTime == "1" then %> selected="selected"<% end %>>Every hour</option>
+						<option value="6" <% if cfgs.ACSCheckTime == "6" then %> selected="selected"<% end %>>Every 6 hours</option>
+						<option value="12" <% if cfgs.ACSCheckTime == "12" then %> selected="selected"<% end %>>Every 12 hours</option>
+						<option value="24" <% if cfgs.ACSCheckTime == "24" then %> selected="selected"<% end %>>Every 24 hours</option>
+					</select>
+				</td>
+			</tr>
+			<% end %>
+			<% if cfgs.AutoChannelSkipList then %>
+			<tr id="skip_list" style="display:none;">
+				<td>AutoChannelSkipList</td>
+				<td>
+					<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+						<input name="AutoChannelSkipList" value="<%=cfgs.AutoChannelSkipList%>" />&nbsp; Example: 144;165
+					<% else %>
+						<input name="AutoChannelSkipList" value="<%=cfgs.AutoChannelSkipList%>" />&nbsp; Example: 2;13;14
+					<% end %>
 				</td>
 			</tr>
 			<% end %>
@@ -158,56 +165,50 @@ if next(diff) ~= nil then
 				<td>
 					<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
 						<% if cfgs.CountryRegionABand then %>
-							<select style="width:auto" name="CountryRegionABand">
-							<option value="0" <% if cfgs.CountryRegionABand == "0" then %> selected="selected"<% end%>>0: Ch36~64, Ch149~165</option>
-							<option value="1" <% if cfgs.CountryRegionABand == "1" then %> selected="selected"<% end%>>1: Ch36~64, Ch100~140</option>
-							<option value="2" <% if cfgs.CountryRegionABand == "2" then %> selected="selected"<% end%>>2: Ch36~64</option>
-							<option value="3" <% if cfgs.CountryRegionABand == "3" then %> selected="selected"<% end%>>3: Ch52~64, Ch149~161</option>
-							<option value="4" <% if cfgs.CountryRegionABand == "4" then %> selected="selected"<% end%>>4: Ch149~165</option>
-							<option value="5" <% if cfgs.CountryRegionABand == "5" then %> selected="selected"<% end%>>5: Ch149~161</option>
-							<option value="6" <% if cfgs.CountryRegionABand == "6" then %> selected="selected"<% end%>>6: Ch36~48</option>
-							<option value="7" <% if cfgs.CountryRegionABand == "7" then %> selected="selected"<% end%>>7: Ch36~64, Ch100~140, Ch149~165</option>
-							<option value="8" <% if cfgs.CountryRegionABand == "8" then %> selected="selected"<% end%>>8: Ch52~64</option>
-							<option value="9" <% if cfgs.CountryRegionABand == "9" then %> selected="selected"<% end%>>9: Ch36~64, Ch100~116, Ch132~140, Ch149~165</option>
-							<option value="10" <% if cfgs.CountryRegionABand == "10" then %> selected="selected"<% end%>>10: Ch36~48, Ch149~165</option>
-							<option value="11" <% if cfgs.CountryRegionABand == "11" then %> selected="selected"<% end%>>11: Ch36~64, Ch100~120, Ch149~161</option>
-							<option value="12" <% if cfgs.CountryRegionABand == "12" then %> selected="selected"<% end%>>12: Ch36~64, Ch100~144</option>
-							<option value="13" <% if cfgs.CountryRegionABand == "13" then %> selected="selected"<% end%>>13: Ch36~64, Ch100~144, Ch149~165</option>
-							<option value="14" <% if cfgs.CountryRegionABand == "14" then %> selected="selected"<% end%>>14: Ch36~64, Ch100~116, Ch132~144, Ch149~165</option>
-							<option value="15" <% if cfgs.CountryRegionABand == "15" then %> selected="selected"<% end%>>15: Ch149~173</option>
-							<option value="16" <% if cfgs.CountryRegionABand == "16" then %> selected="selected"<% end%>>16: Ch52~64, Ch149~165</option>
-							<option value="17" <% if cfgs.CountryRegionABand == "17" then %> selected="selected"<% end%>>17: Ch36~48, Ch149~161</option>
-							<option value="18" <% if cfgs.CountryRegionABand == "18" then %> selected="selected"<% end%>>18: Ch36~64, Ch100~116, Ch132~140</option>
-							<option value="19" <% if cfgs.CountryRegionABand == "19" then %> selected="selected"<% end%>>19: Ch56~64, Ch100~140, Ch149~161</option>
-							<option value="20" <% if cfgs.CountryRegionABand == "20" then %> selected="selected"<% end%>>20: Ch36~64, Ch100~124, Ch149~161</option>
-							<option value="21" <% if cfgs.CountryRegionABand == "21" then %> selected="selected"<% end%>>21: Ch36~64, Ch100~140, Ch149~161</option>
-							<option value="22" <% if cfgs.CountryRegionABand == "22" then %> selected="selected"<% end%>>22: Ch100~140</option>
-							<option value="30" <% if cfgs.CountryRegionABand == "30" then %> selected="selected"<% end%>>30: Ch36~48, Ch52~64, Ch100~140, Ch149~165</option>
-							<option value="31" <% if cfgs.CountryRegionABand == "31" then %> selected="selected"<% end%>>31: Ch52~64, Ch100~140, Ch149~165</option>
-							<option value="32" <% if cfgs.CountryRegionABand == "32" then %> selected="selected"<% end%>>32: Ch36~48, Ch52~64, Ch100~140, Ch149~161</option>
-							<option value="33" <% if cfgs.CountryRegionABand == "33" then %> selected="selected"<% end%>>33: Ch36~48, Ch52~64, Ch100~140</option>
-							<option value="34" <% if cfgs.CountryRegionABand == "34" then %> selected="selected"<% end%>>34: Ch36~48, Ch52~64, Ch149~165</option>
-							<option value="35" <% if cfgs.CountryRegionABand == "35" then %> selected="selected"<% end%>>35: Ch36~48, Ch52~64</option>
-							<option value="36" <% if cfgs.CountryRegionABand == "36" then %> selected="selected"<% end%>>36: Ch36~48, Ch100~140, Ch149~165</option>
-							<option value="37" <% if cfgs.CountryRegionABand == "37" then %> selected="selected"<% end%>>37: Ch36~48, Ch52~64, Ch149~165, Ch173</option>
+							<select name="CountryRegionABand" style="width:auto; min-width:180px;" id="Region" onchange="CountryRegion_onchange(this.options[this.options.selectedIndex].value)">
+								<option value="0" <% if cfgs.CountryRegionABand == "0" then %> selected="selected"<% end%>>0: Ch36~64, Ch149~165</option>
+								<option value="1" <% if cfgs.CountryRegionABand == "1" then %> selected="selected"<% end%>>1: Ch36~64, Ch100~140</option>
+								<option value="2" <% if cfgs.CountryRegionABand == "2" then %> selected="selected"<% end%>>2: Ch36~64</option>
+								<option value="3" <% if cfgs.CountryRegionABand == "3" then %> selected="selected"<% end%>>3: Ch52~64, Ch149~161</option>
+								<option value="4" <% if cfgs.CountryRegionABand == "4" then %> selected="selected"<% end%>>4: Ch149~165</option>
+								<option value="5" <% if cfgs.CountryRegionABand == "5" then %> selected="selected"<% end%>>5: Ch149~161</option>
+								<option value="6" <% if cfgs.CountryRegionABand == "6" then %> selected="selected"<% end%>>6: Ch36~48</option>
+								<option value="7" <% if cfgs.CountryRegionABand == "7" then %> selected="selected"<% end%>>7: Ch36~64, Ch100~140, Ch149~165</option>
+								<option value="8" <% if cfgs.CountryRegionABand == "8" then %> selected="selected"<% end%>>8: Ch52~64</option>
+								<option value="9" <% if cfgs.CountryRegionABand == "9" then %> selected="selected"<% end%>>9: Ch36~64, Ch100~116, Ch132~140, Ch149~165</option>
+								<option value="10" <% if cfgs.CountryRegionABand == "10" then %> selected="selected"<% end%>>10: Ch36~48, Ch149~165</option>
+								<option value="11" <% if cfgs.CountryRegionABand == "11" then %> selected="selected"<% end%>>11: Ch36~64, Ch100~120, Ch149~161</option>
+								<option value="12" <% if cfgs.CountryRegionABand == "12" then %> selected="selected"<% end%>>12: Ch36~64, Ch100~144</option>
+								<option value="13" <% if cfgs.CountryRegionABand == "13" then %> selected="selected"<% end%>>13: Ch36~64, Ch100~144, Ch149~165</option>
+								<option value="14" <% if cfgs.CountryRegionABand == "14" then %> selected="selected"<% end%>>14: Ch36~64, Ch100~116, Ch132~144, Ch149~165</option>
+								<option value="15" <% if cfgs.CountryRegionABand == "15" then %> selected="selected"<% end%>>15: Ch149~173</option>
+								<option value="16" <% if cfgs.CountryRegionABand == "16" then %> selected="selected"<% end%>>16: Ch52~64, Ch149~165</option>
+								<option value="17" <% if cfgs.CountryRegionABand == "17" then %> selected="selected"<% end%>>17: Ch36~48, Ch149~161</option>
+								<option value="18" <% if cfgs.CountryRegionABand == "18" then %> selected="selected"<% end%>>18: Ch36~64, Ch100~116, Ch132~140</option>
+								<option value="19" <% if cfgs.CountryRegionABand == "19" then %> selected="selected"<% end%>>19: Ch56~64, Ch100~140, Ch149~161</option>
+								<option value="20" <% if cfgs.CountryRegionABand == "20" then %> selected="selected"<% end%>>20: Ch36~64, Ch100~124, Ch149~161</option>
+								<option value="21" <% if cfgs.CountryRegionABand == "21" then %> selected="selected"<% end%>>21: Ch36~64, Ch100~140, Ch149~161</option>
+								<option value="22" <% if cfgs.CountryRegionABand == "22" then %> selected="selected"<% end%>>22: Ch100~140</option>
+								<option value="35" <% if cfgs.CountryRegionABand == "35" then %> selected="selected"<% end%>>35: Ch36~64, Ch132~144, Ch149~165</option>
+							</select>
 						<% end %>
 					<% else %>
 						<% if cfgs.CountryRegion then %>
-							<select style="width:auto" name="CountryRegion">
-							<option value="0" <% if cfgs.CountryRegion == "0" then %> selected="selected"<% end%>>0: Ch1~11</option>
-							<option value="1" <% if cfgs.CountryRegion == "1" then %> selected="selected"<% end%>>1: Ch1~13</option>
-							<option value="2" <% if cfgs.CountryRegion == "2" then %> selected="selected"<% end%>>2: Ch10~11</option>
-							<option value="3" <% if cfgs.CountryRegion == "3" then %> selected="selected"<% end%>>3: Ch10~13</option>
-							<option value="4" <% if cfgs.CountryRegion == "4" then %> selected="selected"<% end%>>4: Ch14</option>
-							<option value="5" <% if cfgs.CountryRegion == "5" then %> selected="selected"<% end%>>5: Ch1~14</option>
-							<option value="6" <% if cfgs.CountryRegion == "6" then %> selected="selected"<% end%>>6: Ch3~9</option>
-							<option value="7" <% if cfgs.CountryRegion == "7" then %> selected="selected"<% end%>>7: Ch5~13</option>
-							<option value="31" <% if cfgs.CountryRegion == "31" then %> selected="selected"<% end%>>31: Ch1~11, Ch12~14</option>
-							<option value="32" <% if cfgs.CountryRegion == "32" then %> selected="selected"<% end%>>32: Ch1~11, Ch12~13</option>
-							<option value="33" <% if cfgs.CountryRegion == "33" then %> selected="selected"<% end%>>33: Ch1~14</option>
+							<select name="CountryRegion" style="width:auto; min-width:180px;" id="Region" onchange="CountryRegion_onchange(this.options[this.options.selectedIndex].value)">
+								<option value="0" <% if cfgs.CountryRegion == "0" then %> selected="selected"<% end%>>0: Ch1~11</option>
+								<option value="1" <% if cfgs.CountryRegion == "1" then %> selected="selected"<% end%>>1: Ch1~13</option>
+								<option value="2" <% if cfgs.CountryRegion == "2" then %> selected="selected"<% end%>>2: Ch10~11</option>
+								<option value="3" <% if cfgs.CountryRegion == "3" then %> selected="selected"<% end%>>3: Ch10~13</option>
+								<option value="4" <% if cfgs.CountryRegion == "4" then %> selected="selected"<% end%>>4: Ch14</option>
+								<option value="5" <% if cfgs.CountryRegion == "5" then %> selected="selected"<% end%>>5: Ch1~14</option>
+								<option value="6" <% if cfgs.CountryRegion == "6" then %> selected="selected"<% end%>>6: Ch3~9</option>
+								<option value="7" <% if cfgs.CountryRegion == "7" then %> selected="selected"<% end%>>7: Ch5~13</option>
+								<option value="31" <% if cfgs.CountryRegion == "31" then %> selected="selected"<% end%>>31: Ch1~11, Ch12~14</option>
+								<option value="32" <% if cfgs.CountryRegion == "32" then %> selected="selected"<% end%>>32: Ch1~11, Ch12~13</option>
+								<option value="33" <% if cfgs.CountryRegion == "33" then %> selected="selected"<% end%>>33: Ch1~14</option>
+							</select>
 						<% end %>
 					<% end %>
-				</select>
 				</td>
 			</tr>
 			<% if cfgs.HT_OpMode then %>
@@ -236,7 +237,7 @@ if next(diff) ~= nil then
 			<tr>
 				<td>Channel BandWidth</td>
 				<td>
-					<select style="width:auto" name="__bw" id="__bw"">
+					<select style="width:auto" name="__bw" id="__bw" onchange="Bw_onchange(this.options[this.options.selectedIndex].value)">
 						<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
 							<option value="20" <% if dev.__bw == "20" then %> selected="selected"<% end%>>20 MHz</option>
 							<option value="40" <% if dev.__bw == "40" then %> selected="selected"<% end%>>40 MHz</option>
@@ -254,43 +255,47 @@ if next(diff) ~= nil then
 				</td>
 			</tr>
 			<% if cfgs.HT_EXTCHA then %>
-			<tr>
 				<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
 				<% else %>
-				<td>2.4G 40Mhz Ext Channel</td>
-				<td>
-					<% if cfgs.ApCliEnable == "1" then %>
-						<select style="width:auto" name="Channel" disabled="disabled">
-							<option selected="selected">APClient/Repeater Mode</option>
-					<% else %>
-						<select style="width:auto" name="HT_EXTCHA">
-							<option value="0" <% if cfgs.HT_EXTCHA == "0" then %> selected="selected"<% end%>>Below</option>
-							<option value="1" <% if cfgs.HT_EXTCHA == "1" then %> selected="selected"<% end%>>Above</option>
-						</select>
-					<% end %>
+				<tr id="ext_ch" style="display:none;">
+					<td>40MHz Ext Channel</td>
+					<td>
+						<% if cfgs.ApCliEnable == "1" then %>
+							<select style="width:auto" name="ExtChannel" disabled="disabled">
+								<option selected="selected">APClient/Repeater Mode</option>
+							</select
+						<% else %>
+							<select style="width:auto; min-width:180px;" name="HT_EXTCHA" id="HT_EXTCHA"></select>
+						<% end %>
+					</td>
+				</tr>
+				<tr id="ext_cha" style="display:none;">
+					<td>40MHz Ext Channel</td>
+					<td>
+						<select style="width:auto" name="HT_EXTCHA" disabled="disabled"><option selected="selected">Auto</option></select>
+					</td>
+				</tr>
 				<% end %>
-				</td>
-			</tr>
 			<% end %>
 			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
-			<tr>
-				<td>5G 2nd 80Mhz Channel</td>
-				<td>
-				<% if cfgs.ApCliEnable == "1" then %>
-					<select style="width:auto" name="VHT_Sec80_Channel" disabled="disabled">
-					<option selected="selected">APClient/Repeater Mode</option>
-				<% else %>
-					<select style="width:auto" name="VHT_Sec80_Channel">
-					<option value="36" <% if cfgs.VHT_Sec80_Channel == "36" then %> selected="selected"<% end%>>Ch36 (5.180 GHz) - Ch48 (5.240 GHz)</option>
-					<option value="52" <% if cfgs.VHT_Sec80_Channel == "52" then %> selected="selected"<% end%>>Ch52 (5.260 GHz) - Ch64 (5.320 GHz)</option>
-					<option value="100" <% if cfgs.VHT_Sec80_Channel == "100" then %> selected="selected"<% end%>>Ch100 (5.500 GHz) - Ch112 (5.560 GHz)</option>
-					<option value="116" <% if cfgs.VHT_Sec80_Channel == "116" then %> selected="selected"<% end%>>Ch116 (5.580 GHz) - Ch128 (5.640 GHz)</option>
-					<option value="132" <% if cfgs.VHT_Sec80_Channel == "132" then %> selected="selected"<% end%>>Ch132 (5.660 GHz) - Ch144 (5.720 GHz)</option>
-					<option value="149" <% if cfgs.VHT_Sec80_Channel == "149" then %> selected="selected"<% end%>>Ch149 (5.745 GHz) - Ch161 (5.805 GHz)</option>
-				<% end %>
-					</select>
-				</td>
-			</tr>
+				<tr id="8080" style="display:none;">
+					<td>80+80MHz 2nd Channel<span class="mh" data-tooltip="Use the 2nd Channel above the main one.">*</span></td>
+					<td>
+						<% if cfgs.ApCliEnable == "1" then %>
+							<select style="width:auto" name="VHT_Sec80_Channel" disabled="disabled">
+								<option selected="selected">APClient/Repeater Mode</option>
+							</select
+						<% else %>
+							 <select style="width:auto; min-width:180px;" name="VHT_Sec80_Channel" id="VHT_Sec80_Channel"></select> 
+						<% end %>
+					</td>
+				</tr>
+				<tr id="8080a" style="display:none;">
+					<td>80+80MHz 2nd Channel</td>
+					<td>
+						<select style="width:auto" name="VHT_Sec80_Channel" disabled="disabled"><option selected="selected">Auto</option></select>
+					</td>
+				</tr>
 			<% end %>
 			<% if cfgs.DfsEnable then %>
 				<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
@@ -339,6 +344,7 @@ if next(diff) ~= nil then
 				</td>
 			</tr>
 			<% end %>
+<!--
 			<% if cfgs.HT_DisallowTKIP then %>
 			<tr>
 				<td>HT Disallow TKIP</td>
@@ -348,54 +354,67 @@ if next(diff) ~= nil then
 				</td>
 			</tr>
 			<% end %>
-			<% if cfgs.HT_LDPC then %>
-			<tr>
-				<td>HT LDPC</td>
-				<td>
-					<input type="radio" name="HT_LDPC" value="1" <% if cfgs.HT_LDPC == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="HT_LDPC" value="0" <% if cfgs.HT_LDPC == "0" then %> checked="checked"<% end %>/> Disable
-				</td>
-			</tr>
+-->
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+			<% else %>
+				<% if cfgs.HT_LDPC then %>
+				<tr>
+					<td>HT LDPC</td>
+					<td>
+						<input type="radio" name="HT_LDPC" value="1" <% if cfgs.HT_LDPC == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="HT_LDPC" value="0" <% if cfgs.HT_LDPC == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				</tr>
+				<% end %>
 			<% end %>
-			<% if cfgs.VHT_SGI then %>
-			<tr>
-				<td>VHT Short GI</td>
-				<td>
-					<select style="width:auto" name="VHT_SGI">
-						<option value="0" <% if cfgs.VHT_SGI == "0" then %> selected="selected"<% end%>>Long</option>
-						<option value="1" <% if cfgs.VHT_SGI == "1" then %> selected="selected"<% end%>>Short</option>
-					</select>
-				</td>
-			</tr>
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+				<% if cfgs.VHT_STBC then %>
+				<tr>
+					<td>VHT STBC</td>
+					<td>
+						<input type="radio" name="VHT_STBC" value="1" <% if cfgs.VHT_STBC == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="VHT_STBC" value="0" <% if cfgs.VHT_STBC == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				</tr>
+				<% end %>
 			<% end %>
-			<% if cfgs.VHT_STBC then %>
-			<tr>
-				<td>VHT STBC</td>
-				<td>
-					<input type="radio" name="VHT_STBC" value="1" <% if cfgs.VHT_STBC == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="VHT_STBC" value="0" <% if cfgs.VHT_STBC == "0" then %> checked="checked"<% end %>/> Disable
-				</td>
-			</tr>
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+				<% if cfgs.VHT_BW_SIGNAL then %>
+				<tr>
+					<td>VHT BW Signaling</td>
+					<td>
+						<input type="radio" name="VHT_BW_SIGNAL" value="1" <% if cfgs.VHT_BW_SIGNAL == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="VHT_BW_SIGNAL" value="0" <% if cfgs.VHT_BW_SIGNAL == "0" then %> checked="checked"<% end %>/> Disable
+						<input type="radio" name="VHT_BW_SIGNAL" value="0" <% if cfgs.VHT_BW_SIGNAL == "2" then %> checked="checked"<% end %>/> Dynamic
+					</td>
+				</tr>
+				<% end %>
 			<% end %>
-			<% if cfgs.VHT_BW_SIGNAL then %>
-			<tr>
-				<td>VHT BW Signaling</td>
-				<td>
-					<input type="radio" name="VHT_BW_SIGNAL" value="1" <% if cfgs.VHT_BW_SIGNAL == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="VHT_BW_SIGNAL" value="0" <% if cfgs.VHT_BW_SIGNAL == "0" then %> checked="checked"<% end %>/> Disable
-					<input type="radio" name="VHT_BW_SIGNAL" value="0" <% if cfgs.VHT_BW_SIGNAL == "2" then %> checked="checked"<% end %>/> Dynamic
-				</td>
-			</tr>
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+				<% if cfgs.VHT_LDPC then %>
+				<tr>
+					<td>VHT LDPC</td>
+					<td>
+						<input type="radio" name="VHT_LDPC" value="1" <% if cfgs.VHT_LDPC == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="VHT_LDPC" value="0" <% if cfgs.VHT_LDPC == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				</tr>
+				<% end %>
 			<% end %>
-			<% if cfgs.VHT_LDPC then %>
-			<tr>
-				<td>VHT LDPC</td>
-				<td>
-					<input type="radio" name="VHT_LDPC" value="1" <% if cfgs.VHT_LDPC == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="VHT_LDPC" value="0" <% if cfgs.VHT_LDPC == "0" then %> checked="checked"<% end %>/> Disable
-				</td>
-			</tr>
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+				<% if cfgs.VHT_SGI then %>
+				<tr>
+					<td>VHT Short GI</td>
+					<td>
+						<select style="width:auto" name="VHT_SGI">
+							<option value="0" <% if cfgs.VHT_SGI == "0" then %> selected="selected"<% end%>>Long</option>
+							<option value="1" <% if cfgs.VHT_SGI == "1" then %> selected="selected"<% end%>>Short</option>
+						</select>
+					</td>
+				</tr>
+				<% end %>
 			<% end %>
+<!--
 			<% if cfgs.BGProtection then %>
 			<tr>
 				<td>BG Protection Mode</td>
@@ -408,28 +427,32 @@ if next(diff) ~= nil then
 				</td>
 			</tr>
 			<% end %>
-			<% if cfgs.VHT_BW then %>
-			<tr>
-				<td>HT Protection</td>
-				<td>
-					<input type="radio" name="HT_PROTECT" value="1" <% if cfgs.HT_PROTECT == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="HT_PROTECT" value="0" <% if cfgs.HT_PROTECT == "0" then %> checked="checked"<% end %>/> Disable
-				</td>
-			</tr>
+-->
+			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+			<% else %>
+				<% if cfgs.HT_PROTECT then %>
+					<tr>
+						<td>HT Protection</td>
+						<td>
+							<input type="radio" name="HT_PROTECT" value="1" <% if cfgs.HT_PROTECT == "1" then %> checked="checked"<% end %>/> Enable
+							<input type="radio" name="HT_PROTECT" value="0" <% if cfgs.HT_PROTECT == "0" then %> checked="checked"<% end %>/> Disable
+						</td>
+					</tr>
+				<% end %>
 			<% end %>
 			<% if cfgs.BeaconPeriod then %>
 			<tr>
 				<td>Beacon Interval</td>
 				<td>
-					<input name="BeaconPeriod" value="<%=cfgs.BeaconPeriod%>" /> ms(range 20-999, default 100)
+					<input name="BeaconPeriod" value="<%=cfgs.BeaconPeriod%>" /><span class="he1">ms(range 20-999, default 100)&nbsp;</span>
 				</td>
 			</tr>
 			<% end %>
 			<% if cfgs.DtimPeriod then %>
 			<tr>
-				<td>Data Beacon Rate (DTIM)&ensp;</td>
+				<td>Data Beacon Rate (DTIM)</td>
 				<td>
-					<input name="DtimPeriod" value="<%=cfgs.DtimPeriod%>" /> ms(range 1-255, default 1)
+					<input name="DtimPeriod" value="<%=cfgs.DtimPeriod%>" /><span class="he1">ms(range 1-255, default 1)&emsp;&ensp;&ensp;</span>
 				</td>
 			</tr>
 			<% end %>
@@ -437,7 +460,7 @@ if next(diff) ~= nil then
 			<tr>
 				<td>Fragment Threshold</td>
 				<td>
-					<input name="FragThreshold" value="<%=cfgs.FragThreshold%>" /> (range 256-2346, default 2346)
+					<input name="FragThreshold" value="<%=cfgs.FragThreshold%>" /><span class="he1">(range 256-2346, default 2346)</span>
 				</td>
 			</tr>
 			<% end %>
@@ -445,15 +468,34 @@ if next(diff) ~= nil then
 			<tr>
 				<td>RTS Threshold</td>
 				<td>
-					<input name="RTSThreshold" value="<%=cfgs.RTSThreshold%>" /> (range 256-2347, default 2347)
+					<input name="RTSThreshold" value="<%=cfgs.RTSThreshold%>" /><span class="he1">(range 256-2347, default 2347)</span>
 				</td>
 			</tr>
 			<% end %>
+			<% if cfgs.MacAddress then %>
+			<tr>
+				<td>Change MAC-Address</td>
+				<td>
+					<input name="MacAddress" value="<%=cfgs.MacAddress%>" /><span class="he1">e.g. 01:23:45:67:89:AB&emsp;&emsp;&emsp;&ensp;</span>
+				</td>
+			</tr>
+			<% end %>
+<!--
 			<% if cfgs.TxPower then %>
 			<tr>
 				<td>TX Power</td>
 				<td>
 					<input name="TxPower" value="<%=cfgs.TxPower%>" disabled="disabled" /> (range 1-100, default 100)
+				</td>
+			</tr>
+			<% end %>
+-->
+			<% if cfgs.SKUenable then %>
+			<tr>
+				<td>TX Power Low</td>
+				<td>
+					<input type="radio" name="SKUenable" value="1" <% if cfgs.SKUenable == "1" then %> checked="checked"<% end %>/> Enable
+					<input type="radio" name="SKUenable" value="0" <% if cfgs.SKUenable == "0" then %> checked="checked"<% end %>/> Disable
 				</td>
 			</tr>
 			<% end %>
@@ -475,15 +517,6 @@ if next(diff) ~= nil then
 				</td>
 			</tr>
 			<% end %>
-			<% if cfgs.TxBurst then %>
-			<tr>
-				<td>TX Burst</td>
-				<td>
-					<input type="radio" name="TxBurst" value="1" <% if cfgs.TxBurst == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="TxBurst" value="0" <% if cfgs.TxBurst == "0" then %> checked="checked"<% end %>/> Disable
-				</td>
-			</tr>
-			<% end %>
 			<% if cfgs.PktAggregate then %>
 			<tr>
 				<td>Packet Aggregate</td>
@@ -494,33 +527,67 @@ if next(diff) ~= nil then
 			</tr>
 			<% end %>
 			<% if cfgs.IEEE80211H then %>
+				<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
+				<tr>
+					<td>802.11H</td>
+					<td>
+						<input type="radio" name="IEEE80211H" value="1" <% if cfgs.IEEE80211H == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="IEEE80211H" value="0" <% if cfgs.IEEE80211H == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				</tr>
+				<% end %>
+			<% end %>
+			<% if cfgs.TxBurst then %>
 			<tr>
-				<td>802.11H</td>
+				<td>TX Burst</td>
 				<td>
-					<input type="radio" name="IEEE80211H" value="1" <% if cfgs.IEEE80211H == "1" then %> checked="checked"<% end %>/> Enable
-					<input type="radio" name="IEEE80211H" value="0" <% if cfgs.IEEE80211H == "0" then %> checked="checked"<% end %>/> Disable
+					<input type="radio" name="TxBurst" value="1" <% if cfgs.TxBurst == "1" then %> checked="checked"<% end %>/> Enable
+					<input type="radio" name="TxBurst" value="0" <% if cfgs.TxBurst == "0" then %> checked="checked"<% end %>/> Disable
 				</td>
 			</tr>
 			<% end %>
-			<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
-				<% if cfgs.MUTxRxEnable then %>
-				<tr>
-					<td>MU-MIMO DL</td>
+			<% if cfgs.VOW_Airtime_Fairness_En then %>
+			<tr>
+				<td>Airtime Fairness</td>
+				<td>
+					<input type="radio" name="VOW_Airtime_Fairness_En" value="1" <% if cfgs.VOW_Airtime_Fairness_En == "1" then %> checked="checked"<% end %>/> Enable
+					<input type="radio" name="VOW_Airtime_Fairness_En" value="0" <% if cfgs.VOW_Airtime_Fairness_En == "0" then %> checked="checked"<% end %>/> Disable
+				</td>
+			</tr>
+			<% end %>
+			<% if cfgs.ITxBfEn then %>
+			<tr>
+				<td>Beamforming Implicit</td>
+				<td>
+					<input type="radio" name="ITxBfEn" value="1" <% if cfgs.ITxBfEn == "1" then %> checked="checked"<% end %>/> Enable
+					<input type="radio" name="ITxBfEn" value="0" <% if cfgs.ITxBfEn == "0" then %> checked="checked"<% end %>/> Disable
+				</td>
+			</tr>
+			<% end %>
+			<% if cfgs.ETxBfEnCond then %>
+			<tr>
+				<td>Beamforming Explicit</td>
+				<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
 					<td>
-						<input type="radio" name="__mimo" id="__mimo" value="1" <% if dev.__mimo == "1" then %> checked="checked"<% end %>/> Enable
-						<input type="radio" name="__mimo" id="__mimo" value="0" <% if dev.__mimo == "0" then %> checked="checked"<% end %>/> Disable
+						<input type="radio" name="ETxBfEnCond" id="ETxBfEnCond" onchange="beam_onchange(1);" value="1" <% if cfgs.ETxBfEnCond == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="ETxBfEnCond" id="ETxBfEnCond" onchange="beam_onchange(0);" value="0" <% if cfgs.ETxBfEnCond == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				<% else %>
+					<td>
+						<input type="radio" name="ETxBfEnCond" value="1" <% if cfgs.ETxBfEnCond == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="ETxBfEnCond" value="0" <% if cfgs.ETxBfEnCond == "0" then %> checked="checked"<% end %>/> Disable
+					</td>
+				<% end %>
+			</tr>
+			<% end %>
+			<% if cfgs.MUTxRxEnable then %>
+				<tr id="mimo" style="display:none;">
+					<td>MU-MIMO</td>
+					<td>
+						<input type="radio" name="MUTxRxEnable" value="3" <% if cfgs.MUTxRxEnable == "3" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="MUTxRxEnable" value="0" <% if cfgs.MUTxRxEnable == "0" then %> checked="checked"<% end %>/> Disable
 					</td>
 				</tr>
-				<% end %>
-				<% if cfgs.ITxBfEn then %>
-				<tr>
-					<td>Beamforming</td>
-					<td>
-						<input type="radio" name="__beam" id="__beam" value="1" <% if dev.__beam == "1" then %> checked="checked"<% end %>/> Enable
-						<input type="radio" name="__beam" id="__beam" value="0" <% if dev.__beam == "0" then %> checked="checked"<% end %>/> Disable
-					</td>
-				</tr>
-				<% end %>
 			<% end %>
 		</table>
 
@@ -529,7 +596,7 @@ if next(diff) ~= nil then
 	<div class="cbi-page-actions">
 		<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
 		<input class="cbi-button cbi-button-positive" value="Save" type="submit" />
-		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='wifi_reload()' />
+		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='save_apply()' />
 		<input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
 	</div>
 </form>
@@ -554,20 +621,398 @@ if next(diff) ~= nil then
 </form>
 
 
+<script src="/luci-static/resources/jquery/jquery-1.4.js"></script>
 <script type="text/javascript">
-	function wifi_reload(url) {
-		window.scrollTo(0, 0);
-		document.getElementById('loading').style.display="";
-		XHR.get(url, null,
-			function(x)
-			{
-				console.log(x);
-				document.getElementById("loading").style.display="none";
-				window.location.reload();
-			}
-		);
+function wifi_reload(url) {
+	window.scrollTo(0, 0);
+	document.getElementById('loading').style.display="";
+	XHR.get(url, null,
+		function(x)
+		{
+			console.log(x);
+			document.getElementById("loading").style.display="none";
+			window.location.reload();
+		}
+	);
+}
+
+function save_apply() {
+	window.scrollTo(0, 0);
+	document.getElementById('loading').style.display="";
+}
+
+function WirelessMode_onchange(mode) {
+	getBw(mode, null);
+}
+
+function Bw_onchange(bw, ch) {
+	var ch_val;	
+
+	if (!ch){
+		var ch_o = document.getElementById('Channel');
+
+		if (ch_o)
+			ch_val = ch_o.value;
+
+		if (ch_val == "")
+			ch_val = "<%=cfgs.Channel%>";
+	} else {
+		ch_val = ch
 	}
 
+	if ($('#Channel').length > 0) {
+		var ch_a = document.getElementById('Channel').value;
+	} else {
+		var ch_a = ""
+	}
+
+	if (bw == "161") {
+		if (ch_a == "0") {
+			document.getElementById("8080a").style.display = "";
+		} else {
+			document.getElementById("8080").style.display = "";
+			if ($('#VHT_Sec80_Channel').length > 0) {
+			get5G2nd80MhzChannelList(bw, ch_val);
+			}
+		}
+	} else if (bw == "40" || bw == "60") {
+		if (ch_a == "0") {
+			if ($('#ext_ch').length > 0) {
+				document.getElementById("ext_cha").style.display = "";
+			} else if ($('#8080').length > 0) {
+				document.getElementById("8080").style.display = "none";
+				document.getElementById("8080a").style.display = "none";
+			}
+		} else {
+			if ($('#ext_ch').length > 0) {
+				document.getElementById("ext_ch").style.display = "";
+				if ($('#HT_EXTCHA').length > 0) {
+				getHTExtChannel(bw, ch_val);
+				}
+			} else if ($('#8080').length > 0) {
+				document.getElementById("8080").style.display = "none";
+				document.getElementById("8080a").style.display = "none";
+			}
+		}
+	} else {
+		if ($('#8080').length > 0) {
+			document.getElementById("8080").style.display = "none";
+			document.getElementById("8080a").style.display = "none";
+		} else if ($('#ext_ch').length > 0) {
+			document.getElementById("ext_ch").style.display = "none";
+			document.getElementById("ext_cha").style.display = "none";
+		}
+	}	
+}
+
+function beam_onchange(to) {
+	if (to == "1") {
+		document.getElementById("mimo").style.display = "";
+	} else {
+		document.getElementById("mimo").style.display = "none";
+	}
+}
+
+function ch_onchange(ch) {
+	if ($('#Channel').val() > 0) {
+		getBw(null, ch);
+	}
+	
+	if (ch == "0") {
+		var cbw = document.getElementById('__bw').value;
+		
+		document.getElementById("auto_ch").style.display = "";
+		document.getElementById("skip_list").style.display = "";
+		if (cbw == "161") {
+			if ($('#8080').length > 0) {
+				document.getElementById("8080a").style.display = "";
+				document.getElementById("8080").style.display = "none";
+			}			
+		} else if (cbw == "40" || cbw == "60") {
+			if ($('#ext_ch').length > 0) {
+				document.getElementById("ext_cha").style.display = "";
+				document.getElementById("ext_ch").style.display = "none";
+			}
+		}
+	} else {
+		document.getElementById("auto_ch").style.display = "none";
+		document.getElementById("skip_list").style.display = "none";
+		if ($('#8080').length > 0) {
+			document.getElementById("8080a").style.display = "none";
+		}
+		if ($('#ext_ch').length > 0) {
+			document.getElementById("ext_cha").style.display = "none";
+		}
+	}
+}
+
+function GetCountryRegion(mode) {
+	var cr_o = document.getElementById('Region');
+	var cr = "";
+
+	if (cr_o) {
+		cr = cr_o.value;
+	}
+
+	if (cr == "") {
+		if (is_mode_gband(mode)) {
+			cr = "<%=cfgs.CountryRegion%>";
+		} else if (is_mode_aband(mode)) {
+			cr = "<%=cfgs.CountryRegionABand%>";
+		} else {
+			alert("Cannot get valid CountryRegion from invalid WireleeMode");
+		}
+	}
+
+	return cr;
+}
+	
+function getBw(mode, ch) {
+	/* choose bw as wide as possible if modification is needed */
+	var bw_sel = document.getElementById('__bw');
+	var wmode;
+
+	if (!mode) {
+		wmode = document.getElementById('WirelessMode');
+		wmode = wmode.value*1;
+	} else {
+		wmode = mode*1;
+	}
+
+	if (is_mode_legacy_only(wmode)) {
+		for (var idx in bw_sel.options) {
+			bw_sel.options[idx].disabled = false;
+
+			if (bw_sel.options[idx].value == 20)
+				bw_sel.options[idx].selected = true;
+
+			if (bw_sel.options[idx].value > 20)
+				bw_sel.options[idx].disabled = true;
+		}
+	} else if (is_mode_gband(wmode)) {
+		for (var idx in bw_sel.options) {
+			bw_sel.options[idx].disabled = false;
+		}
+	} else if (is_mode_aband(wmode)) {
+		for (var idx in bw_sel.options) {
+			bw_sel.options[idx].disabled = false;
+		}
+	}
+
+	Bw_onchange(bw_sel.value, ch);
+}
+
+function is_mode_legacy_only(mode) {
+	var imode = mode*1;
+
+	return ((imode >= 0) && (imode <= 4));
+}
+
+function is_mode_gband(mode) {
+	var imode = mode*1;
+	var gband_mode_list = [0,1,9,10];
+	var i;
+
+	for (i = 0; i < gband_mode_list.length; i++){
+		if( gband_mode_list[i] == imode )
+			return true;
+	}
+
+	return false;
+}
+
+function is_mode_aband(mode) {
+	var imode = mode*1;
+	var aband_mode_list = [2,8,14];
+	var i;
+
+	for (i = 0; i < aband_mode_list.length; i++){
+		if( aband_mode_list[i] == imode )
+			return true;
+	}
+
+	return false;
+}
+
+function init5G2nd80MhzChannelList(list) {
+	var select = document.getElementById('VHT_Sec80_Channel');
+	var ch2 = {};
+	var new_ch2 = null;
+
+	ch2.cval = select.value;
+	ch2.oval = "<%=cfgs.VHT_Sec80_Channel%>";
+
+	initList(select, list, ch2, "channel");
+
+	if (select.length > 0)
+		select.disabled = false;
+	else
+		alert("[Warning] 80+80MHz 2nd Channel is not available. Please Check CountryRegion.");
+}
+
+function get5G2nd80MhzChannelList(bw, ch) {
+	var ch_5g_2nd = document.getElementById('VHT_Sec80_Channel');
+
+		ch_5g_2nd.disabled = true;
+
+	if (ch == "0")
+		return;
+
+	if (bw != "161" || ch == "0")
+		return;
+
+	var mode = document.getElementById('WirelessMode');
+	mode = mode.value*1;
+
+	var cr = GetCountryRegion(mode);
+	XHR.get('<%=luci.dispatcher.build_url("admin", "network", "wifi", "get_5G_2nd_80Mhz_channel_list")%>', { "ch_cur" : ch, "country_region" : cr },
+		function(x)
+		{
+			//console.log(x);
+			//console.log(x.response);
+			var json = eval(x.response);
+			init5G2nd80MhzChannelList(json);
+		}
+	);
+	}
+
+function initHTExtChannelList(list) {
+	var select = document.getElementById('HT_EXTCHA');
+	var ch2 = {};
+	var new_ch2 = null;
+
+	ch2.cval = select.value;
+	ch2.oval = "<%=cfgs.HT_EXTCHA%>";
+
+	initList(select, list, ch2, "val");
+
+	if (select.length > 0)
+		select.disabled = false;
+	else
+		alert("[Warning] 40MHz Ext Channel is not avalable. Please Check CountryRegion.");
+	}
+
+function getHTExtChannel(bw, ch) {
+	var ch_2g_ext = document.getElementById('HT_EXTCHA');
+
+	ch_2g_ext.disabled = true;
+
+	if (ch == "0")
+		return;
+
+	if (bw != "40" && bw != "60")
+		return;
+
+	var mode = document.getElementById('WirelessMode');
+	mode = mode.value*1;
+
+	var cr = GetCountryRegion(mode);
+	XHR.get('<%=luci.dispatcher.build_url("admin", "network", "wifi", "get_HT_ext_channel_list")%>', { "ch_cur" : ch, "country_region" : cr },
+
+		function(x)
+		{
+			console.log(x);
+			console.log(x.response);
+			var json = eval(x.response);
+			initHTExtChannelList(json);
+		}
+	);
+}
+
+function CountryRegion_onchange(country_region) {
+	if ($('#Channel').length > 0) {
+		wmode = "<%=cfgs.WirelessMode%>";
+		getChannelList(wmode, country_region);
+	} else {
+		Bw_onchange(document.getElementById("__bw").options[document.getElementById("__bw").selectedIndex].value);
+	}
+}
+
+function getChannelList(mode, country_region) {
+			XHR.get('<%=luci.dispatcher.build_url("admin", "network", "wifi", "get_channel_list")%>', { "mode" : mode, "country_region" : country_region },
+		function(x)
+		{
+			console.log(x);
+			console.log(x.response);
+			var json = eval(x.response);
+			initChannelList(json);
+		}
+	);
+}
+
+function initChannelList(list) {
+	/* choose auto select when no matching item in the lis */
+	var select = document.getElementById('Channel');
+	var ch = {};
+	var new_ch = null;
+
+	ch.cval = select.value;
+	ch.oval = "<%=dev.Channel%>";
+
+	var new_ch = initList(select, list, ch, "channel");
+	ch_onchange(new_ch);
+}
+
+function initList(selobj, list, selvals, value, text){
+	var sel = {};
+	var id = selobj.id;
+
+	if (typeof(selvals) != "object")
+		sel[0] = selvals;
+	else
+		sel = selvals;
+
+	selobj.innerHTML = "";
+	for (var i in list) {
+		var opt = document.createElement('option');
+
+		if(value)
+			opt.value = list[i][value];
+		else
+			opt.value = list[i].value;
+
+		if(text)
+			opt.text = list[i][text];
+		else
+			opt.text = list[i].text;
+
+		selobj.appendChild(opt);
+	}
+
+	var selv = null;
+	for (var k in sel) {
+		//console.log("[initList][" + id + "] sel[" + k + "]=" + sel[k]);
+		for (var i in selobj.options){
+			if (selobj.options[i].value == sel[k]){
+				selobj.options[i].selected = true;
+				selv = sel[k];
+				//console.log("[initList][" + id + "] found selv=" + selv);
+				break;
+			}
+		}
+
+		if (selv) break;
+	}
+
+	if (!selv) {
+		selv = selobj.value;
+		//console.log("[initList][" + id + "] !selv, selv=" + selv);
+	}
+
+	if ($('#Channel').val() == 0) {
+		ch_onchange(document.getElementById("Channel").options[document.getElementById("Channel").selectedIndex].value);
+	}
+	
+	return selv;
+}
+
+window.onload = function() {
+	CountryRegion_onchange(document.getElementById("Region").options[document.getElementById("Region").selectedIndex].value);
+	if ($('#ETxBfEnCond').length > 0) {
+		beam_onchange(document.querySelector('input[name=ETxBfEnCond]:checked').value);
+	}
+  
+}
 </script>
 
 <%+footer%>

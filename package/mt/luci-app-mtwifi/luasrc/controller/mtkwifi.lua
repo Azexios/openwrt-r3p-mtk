@@ -5,6 +5,9 @@
 -- And you will get your hands dirty.
 --
 -- Hua Shao <nossiac@163.com>
+--------------------------------------------------
+-- For MT7615 and driver version 5.1.0.0
+-- https://github.com/Azexios/openwrt-r3p-mtk
 
 module("luci.controller.mtkwifi", package.seeall)
 local http = require("luci.http")
@@ -30,6 +33,126 @@ function __mtkwifi_reload(devname)
 	end
 end
 
+function __mtkwifi_save_apcli(devname)
+	local profiles = mtkwifi.search_dev_and_profile()
+
+	for dev,profile in pairs(profiles) do
+		if not devname or devname == dev then
+			os.execute("cp -f "..profile.." "..mtkwifi.__profile_bak_path(profile))
+		end
+	end
+end
+
+function remove_ch_by_region(ch_list, region)
+    for i = #ch_list,2,-1 do
+        if not ch_list[i].region[region] then
+            table.remove(ch_list, i)
+        end
+    end
+end
+
+function get_channel_list()
+    local mode = http.formvalue("mode")
+    local region = tonumber(http.formvalue("country_region")) or 1
+    local ch_list
+
+    if mtkwifi.band(mode) == "5G" then
+        ch_list = mtkwifi.ChannelList_5G_All
+    else
+        ch_list = mtkwifi.ChannelList_2G_All
+    end
+
+    remove_ch_by_region(ch_list, region)
+    http.write_json(ch_list)
+end
+
+function get_HT_ext_channel_list()
+    local ch_cur = tonumber(http.formvalue("ch_cur"))
+    local region = tonumber(http.formvalue("country_region")) or 1
+    local ext_ch_list = {}
+
+    if ch_cur <= 14 then -- 2.4G Channel
+        local ch_list = mtkwifi.ChannelList_2G_All
+        local below_ch = ch_cur - 4
+        local above_ch = ch_cur + 4
+        local i = 1
+
+        if below_ch > 0 and ch_list[below_ch + 1].region[region] then
+            ext_ch_list[i] = {}
+            ext_ch_list[i].val = 0
+            ext_ch_list[i].text = ch_list[below_ch + 1].text
+            i = i + 1
+        end
+
+        if above_ch <= 14 and ch_list[above_ch + 1].region[region] then
+            ext_ch_list[i] = {}
+            ext_ch_list[i].val = 1
+            ext_ch_list[i].text = ch_list[above_ch + 1].text
+        end
+    else  -- 5G Channel
+        local ch_list = mtkwifi.ChannelList_5G_All
+        local ext_ch_idx = -1
+        local len = 0
+
+        for k, v in ipairs(ch_list) do
+            len = len + 1
+            if v.channel == ch_cur then
+                ext_ch_idx = (k % 2 == 0) and k + 1 or k - 1
+            end
+        end
+
+        if ext_ch_idx > 0 and ext_ch_idx < len and ch_list[ext_ch_idx].region[region] then
+            ext_ch_list[1] = {}
+            ext_ch_list[1].val = ext_ch_idx % 2
+            ext_ch_list[1].text = ch_list[ext_ch_idx].text
+        end
+    end
+
+    http.write_json(ext_ch_list)
+end
+
+function get_5G_2nd_80Mhz_channel_list()
+    local ch_cur = tonumber(http.formvalue("ch_cur"))
+    local region = tonumber(http.formvalue("country_region"))
+    local ch_list = mtkwifi.ChannelList_5G_2nd_80MHZ_ALL
+    local ch_list_5g = mtkwifi.ChannelList_5G_All
+    local i, j, test_ch, test_idx
+    local bw80_1st_idx = -1
+
+    -- remove adjacent freqencies starting from list tail.
+    for i = #ch_list,1,-1 do
+        for j = 0,3 do
+            if ch_list[i].channel == -1 then
+                break
+            end
+
+            test_ch = ch_list[i].channel + j * 4
+            test_idx = ch_list[i].chidx + j
+
+            if test_ch == ch_cur then
+            if i + 1 <= #ch_list and ch_list[i + 1] then
+                table.remove(ch_list, i + 1)
+            end
+            table.remove(ch_list, i)
+                bw80_1st_idx = i
+                break
+            end
+
+            if i == (bw80_1st_idx - 1) or (not ch_list_5g[test_idx].region[region]) then
+                table.remove(ch_list, i)
+            break
+        end
+    end
+    end
+
+    -- remove unused channel.
+    for i = #ch_list,1,-1 do
+        if ch_list[i].channel == -1 then
+            table.remove(ch_list, i)
+        end
+    end
+    http.write_json(ch_list)
+end
 
 function index()
 
@@ -69,7 +192,7 @@ function dev_cfg(devname)
 		if type(v) ~= type("") and type(v) ~= type(0) then
 			nixio.syslog("err", "dev_cfg, invalid value type for "..k..","..type(v))
 		elseif string.byte(k) == string.byte("_") then
-			nixio.syslog("err", "dev_cfg, special: "..k.."="..v)
+			-- nixio.syslog("err", "dev_cfg, special: "..k.."="..v)
 		else
 			cfgs[k] = v or ""
 		end
@@ -77,8 +200,12 @@ function dev_cfg(devname)
 
 	if cfgs.Channel == "0" then -- Auto Channel Select
 		cfgs.AutoChannelSelect = "3"
+		if cfgs.VHT_Sec80_Channel then
+			cfgs.VHT_Sec80_Channel = ""
+		end
 	else
 		cfgs.AutoChannelSelect = "0"
+		cfgs.ACSCheckTime = "0"
 	end
 
 	if http.formvalue("__bw") == "20" then
@@ -103,65 +230,60 @@ function dev_cfg(devname)
 		cfgs.VHT_BW = 3
 	end
 
-	if http.formvalue("__mimo") == "1" then
-		cfgs.MUTxRxEnable = 1
-		cfgs.MuMimoDlEnable = 1
-		cfgs.MuMimoUlEnable = 0
-	elseif http.formvalue("__mimo") == "0" then
-		cfgs.MUTxRxEnable = 0
-		cfgs.MuMimoDlEnable = 0
-		cfgs.MuMimoUlEnable = 0
+	if cfgs.VOW_Airtime_Fairness_En == "1" then
+		cfgs.VOW_Sta_DWRR_Max_Wait_Time = "64"
+	else
+		cfgs.VOW_Sta_DWRR_Max_Wait_Time = "1"
 	end
-	
-	if http.formvalue("__beam") == "1" then
-		cfgs.ITxBfEn = 1
-		cfgs.ETxBfEnCond = 1
-		cfgs.ITxBfEnCond = 1
-	elseif http.formvalue("__beam") == "0" then
-		cfgs.ITxBfEn = 0
-		cfgs.ETxBfEnCond = 0
-		cfgs.ITxBfEnCond = 0
+
+	if cfgs.ETxBfEnCond == "0" then
+		if cfgs.MUTxRxEnable then
+			cfgs.MUTxRxEnable = "0"
+		end
 	end
 
 --	if cfgs.ApCliEnable == "1" then
 --		cfgs.Channel = http.formvalue("__apcli_channel")
 --	end
 
-	-- VOW
-	-- ATC should actually be scattered into each SSID, but I'm just lazy.
-	if cfgs.VOW_Airtime_Fairness_En then
-	for i = 1,tonumber(cfgs.BssidNum) do
-		__atc_tp	 = http.formvalue("__atc_vif"..i.."_tp")	 or "0"
-		__atc_min_tp = http.formvalue("__atc_vif"..i.."_min_tp") or "0"
-		__atc_max_tp = http.formvalue("__atc_vif"..i.."_max_tp") or "0"
-		__atc_at	 = http.formvalue("__atc_vif"..i.."_at")	 or "0"
-		__atc_min_at = http.formvalue("__atc_vif"..i.."_min_at") or "0"
-		__atc_max_at = http.formvalue("__atc_vif"..i.."_max_at") or "0"
+--		VOW
+--		ATC should actually be scattered into each SSID, but I'm just lazy.
 
-		nixio.syslog("info", "ATC.__atc_tp	 ="..i..__atc_tp	 );
-		nixio.syslog("info", "ATC.__atc_min_tp ="..i..__atc_min_tp );
-		nixio.syslog("info", "ATC.__atc_max_tp ="..i..__atc_max_tp );
-		nixio.syslog("info", "ATC.__atc_at	 ="..i..__atc_at	 );
-		nixio.syslog("info", "ATC.__atc_min_at ="..i..__atc_min_at );
-		nixio.syslog("info", "ATC.__atc_max_at ="..i..__atc_max_at );
+--	if cfgs.VOW_Airtime_Fairness_En then
+--	for i = 1,tonumber(cfgs.BssidNum) do
+--		__atc_tp	 = http.formvalue("__atc_vif"..i.."_tp")	 or "0"
+--		__atc_min_tp = http.formvalue("__atc_vif"..i.."_min_tp") or "0"
+--		__atc_max_tp = http.formvalue("__atc_vif"..i.."_max_tp") or "0"
+--		__atc_at	 = http.formvalue("__atc_vif"..i.."_at")	 or "0"
+--		__atc_min_at = http.formvalue("__atc_vif"..i.."_min_at") or "0"
+--		__atc_max_at = http.formvalue("__atc_vif"..i.."_max_at") or "0"
+--
+--		nixio.syslog("info", "ATC.__atc_tp	 ="..i..__atc_tp	 );
+--		nixio.syslog("info", "ATC.__atc_min_tp ="..i..__atc_min_tp );
+--		nixio.syslog("info", "ATC.__atc_max_tp ="..i..__atc_max_tp );
+--		nixio.syslog("info", "ATC.__atc_at	 ="..i..__atc_at	 );
+--		nixio.syslog("info", "ATC.__atc_min_at ="..i..__atc_min_at );
+--		nixio.syslog("info", "ATC.__atc_max_at ="..i..__atc_max_at );--
+--
+--		cfgs.VOW_Rate_Ctrl_En	= mtkwifi.token_set(cfgs.VOW_Rate_Ctrl_En,	i, __atc_tp)
+--		cfgs.VOW_Group_Min_Rate  = mtkwifi.token_set(cfgs.VOW_Group_Min_Rate,  i, __atc_min_tp)
+--		cfgs.VOW_Group_Max_Rate  = mtkwifi.token_set(cfgs.VOW_Group_Max_Rate,  i, __atc_max_tp)
+--
+--		cfgs.VOW_Airtime_Ctrl_En = mtkwifi.token_set(cfgs.VOW_Airtime_Ctrl_En, i, __atc_at)
+--		cfgs.VOW_Group_Min_Ratio = mtkwifi.token_set(cfgs.VOW_Group_Min_Ratio, i, __atc_min_at)
+--		cfgs.VOW_Group_Max_Ratio = mtkwifi.token_set(cfgs.VOW_Group_Max_Ratio, i, __atc_max_at)
+--	end
+--
+--	cfgs.VOW_RX_En = http.formvalue("VOW_RX_En") or "0"
+--	end
 
-		cfgs.VOW_Rate_Ctrl_En	= mtkwifi.token_set(cfgs.VOW_Rate_Ctrl_En,	i, __atc_tp)
-		cfgs.VOW_Group_Min_Rate  = mtkwifi.token_set(cfgs.VOW_Group_Min_Rate,  i, __atc_min_tp)
-		cfgs.VOW_Group_Max_Rate  = mtkwifi.token_set(cfgs.VOW_Group_Max_Rate,  i, __atc_max_tp)
-
-		cfgs.VOW_Airtime_Ctrl_En = mtkwifi.token_set(cfgs.VOW_Airtime_Ctrl_En, i, __atc_at)
-		cfgs.VOW_Group_Min_Ratio = mtkwifi.token_set(cfgs.VOW_Group_Min_Ratio, i, __atc_min_at)
-		cfgs.VOW_Group_Max_Ratio = mtkwifi.token_set(cfgs.VOW_Group_Max_Ratio, i, __atc_max_at)
-	end
-
-	cfgs.VOW_RX_En = http.formvalue("VOW_RX_En") or "0"
-	end
 
 	-- http.write_json(http.formvalue())
 	mtkwifi.save_profile(cfgs, profiles[devname])
 
 	if http.formvalue("__apply") then
 		__mtkwifi_reload(devname)
+		luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 	end
 
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg_view",devname))
@@ -304,9 +426,7 @@ local function __security_cfg(cfgs, vif_idx)
 
 	cfgs.HideSSID = mtkwifi.token_set(cfgs.HideSSID, vif_idx, http.formvalue("__hidessid") or "0")
 	cfgs.NoForwarding = mtkwifi.token_set(cfgs.NoForwarding, vif_idx, http.formvalue("__noforwarding") or "0")
-	cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, http.formvalue("__wmmcapable") or "0")
 	cfgs.TxRate = mtkwifi.token_set(cfgs.TxRate, vif_idx, http.formvalue("__txrate") or "0");
-	cfgs.RekeyInterval = mtkwifi.token_set(cfgs.RekeyInterval, vif_idx, http.formvalue("__rekeyinterval") or "0");
 
 	local __authmode = http.formvalue("__authmode") or "Disable"
 	cfgs.AuthMode = mtkwifi.token_set(cfgs.AuthMode, vif_idx, __authmode)
@@ -335,7 +455,6 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.WPAPSK{n}, ...
 		cfgs.RekeyInterval
 		]]
-
 		cfgs.RekeyMethod = mtkwifi.token_set(cfgs.RekeyMethod, vif_idx, "TIME")
 		cfgs.IEEE8021X = mtkwifi.token_set(cfgs.IEEE8021X, vif_idx, "0")
 		cfgs.DefaultKeyID = mtkwifi.token_set(cfgs.DefaultKeyID, vif_idx, "2")
@@ -348,12 +467,6 @@ local function __security_cfg(cfgs, vif_idx)
 		]]
 		-- for DOT11W_PMF_SUPPORT
 		cfgs.EncrypType = mtkwifi.token_set(cfgs.EncrypType, vif_idx, http.formvalue("__wpa_encrypttype") or "0")
-		if cfgs.PMFMFPC then
-			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, http.formvalue("__pmfmfpc") or "0")
-		end
-		if cfgs.PMFMFPR then
-			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, http.formvalue("__pmfmfpr") or "0")
-		end
 		if cfgs.PMFSHA256 then
 			cfgs.PMFSHA256 = mtkwifi.token_set(cfgs.PMFSHA256, vif_idx, http.formvalue("__pmfsha256") or "0")
 		end
@@ -367,13 +480,7 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.RekeyInterval
 		]]
 		-- for DOT11W_PMF_SUPPORT
-		cfgs.EncrypType = mtkwifi.token_set(cfgs.EncrypType, vif_idx, http.formvalue("__wpa_encrypttype3") or "0")
-		if cfgs.PMFMFPC then
-			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "1")
-		end
-		if cfgs.PMFMFPR then
-			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, http.formvalue("__pmfmfpr") or "0")
-		end
+		cfgs.EncrypType = mtkwifi.token_set(cfgs.EncrypType, vif_idx, "AES")
 		if cfgs.PMFSHA256 then
 			cfgs.PMFSHA256 = mtkwifi.token_set(cfgs.PMFSHA256, vif_idx, http.formvalue("__pmfsha256") or "0")
 		end
@@ -408,12 +515,6 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.PMKCachePeriod = mtkwifi.token_set(cfgs.PMKCachePeriod, vif_idx, http.formvalue("__pmkcacheperiod") or "0")
 		cfgs.PreAuth = mtkwifi.token_set(cfgs.PreAuth, vif_idx, http.formvalue("__preauth") or "0")
 		-- for DOT11W_PMF_SUPPORT
-		if cfgs.PMFMFPC then
-			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, http.formvalue("__pmfmfpc") or "0")
-		end
-		if cfgs.PMFMFPR then
-			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, http.formvalue("__pmfmfpr") or "0")
-		end
 		if cfgs.PMFSHA256 then
 			cfgs.PMFSHA256 = mtkwifi.token_set(cfgs.PMFSHA256, vif_idx, http.formvalue("__pmfsha256") or "0")
 		end
@@ -460,6 +561,42 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.EncrypType = mtkwifi.token_set(cfgs.EncrypType, vif_idx, "SMS4")
 		-- cfgs.wapipsk_keytype
 		-- cfgs.wapipsk_prekey
+	end
+	
+	if __authmode == "WPA3PSK" or __authmode == "OWE" then
+		cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "1")
+		cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "1")
+	elseif __authmode == "WPA2PSKWPA3PSK" then
+		cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "1")
+		cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "0")
+	elseif __authmode == "WPA2PSK" or __authmode == "WPA2" or __authmode == "WPA1WPA2" then
+		if http.formvalue("__mfp") == "0" then
+			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "0")
+			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "0")
+		elseif http.formvalue("__mfp") == "1" then
+			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "1")
+			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "1")
+		elseif http.formvalue("__mfp") == "2" then
+			cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "1")
+			cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "0")
+		end
+	else
+		cfgs.PMFMFPC = mtkwifi.token_set(cfgs.PMFMFPC, vif_idx, "0")
+		cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "0")
+	end
+
+	if http.formvalue("__wmmcapable") == "1" then
+		cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "1")
+		cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "1")
+	else
+		cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "0")
+		cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "0")
+	end
+	
+	if http.formvalue("__rekeyinterval") == "" then
+		cfgs.RekeyInterval = mtkwifi.token_set(cfgs.RekeyInterval, vif_idx, "86400")
+	else
+		cfgs.RekeyInterval = mtkwifi.token_set(cfgs.RekeyInterval, vif_idx, http.formvalue("__rekeyinterval") or "0");
 	end
 
 	mtkwifi.debug("__security_cfg, after, HideSSID="..tostring(cfgs.HideSSID))
@@ -555,6 +692,7 @@ function vif_cfg(dev, vif)
 	mtkwifi.save_profile(cfgs, profile)
 	if http.formvalue("__apply") then
 		__mtkwifi_reload(devname)
+		luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 	end
 	return luci.http.redirect(to_url)
 end
@@ -610,20 +748,39 @@ function apcli_cfg(dev, vif)
 		cfgs.AutoChannelSelect = "3"
 	else
 		cfgs.AutoChannelSelect = "0"
+		cfgs.ACSCheckTime = "0"
 	end
 
 	cfgs.ApCliSsid = ''..mtkwifi.__handleSpecialChars(http.formvalue("ApCliSsid"))
 	local __authmode = http.formvalue("ApCliAuthMode")
-	if __authmode == "Disable" then
+	
+	if __authmode == "WPA3PSK" or __authmode == "OWE" then
+		cfgs.ApCliPMFMFPC= "1"
+		cfgs.ApCliPMFMFPR= "1"
+		cfgs.ApCliEncrypType = "AES"
+		if __authmode == "WPA3PSK" then
+			cfgs.ApCliAuthMode = "WPA3PSK"
+		else
+			cfgs.ApCliAuthMode = "OWE"
+		end
+	elseif __authmode == "WPA2PSK" then
+		cfgs.ApCliPMFMFPC = "1"
+		cfgs.ApCliPMFMFPR = "0"
+		cfgs.ApCliAuthMode = "WPA2PSK"
+		cfgs.ApCliEncrypType = http.formvalue("_wpa_ApCliEncrypType")
+	elseif __authmode == "Disable" then
+		cfgs.ApCliPMFMFPC = "0"
+		cfgs.ApCliPMFMFPR = "0"
 		cfgs.ApCliAuthMode = "OPEN"
 		cfgs.ApCliEncrypType = "NONE"
 	elseif __authmode == "OPEN" or __authmode == "SHARED" then
+		cfgs.ApCliPMFMFPC = "0"
+		cfgs.ApCliPMFMFPR = "0"
 		cfgs.ApCliAuthMode = __authmode
 		cfgs.ApCliEncrypType = http.formvalue("_wep_ApCliEncrypType")
-	elseif __authmode == "WPA3PSK" or __authmode == "WPA2PSKWPA3PSK" or __authmode == "OWE" then
-		cfgs.ApCliAuthMode = __authmode
-		cfgs.ApCliEncrypType = http.formvalue("_wpa_ApCliEncrypType3")
 	else
+		cfgs.ApCliPMFMFPC = "0"
+		cfgs.ApCliPMFMFPR = "0"
 		cfgs.ApCliAuthMode = __authmode
 		cfgs.ApCliEncrypType = http.formvalue("_wpa_ApCliEncrypType")
 	end
@@ -633,7 +790,7 @@ function apcli_cfg(dev, vif)
 	if http.formvalue("__apply") then
 		apcli_connect(dev, vif)
 	end
-	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg_view", dev, vif))
+	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
 
 function apcli_connect(dev, vif)
@@ -657,19 +814,21 @@ function apcli_connect(dev, vif)
 	os.execute("iwpriv "..vifname.." set Channel="..cfgs.Channel)
 	os.execute("iwpriv "..vifname.." set ApCliAuthMode="..cfgs.ApCliAuthMode)
 	os.execute("iwpriv "..vifname.." set ApCliEncrypType="..cfgs.ApCliEncrypType)
+	os.execute("iwpriv "..vifname.." set ApCliPMFMFPC="..cfgs.ApCliPMFMFPC)
+	os.execute("iwpriv "..vifname.." set ApCliPMFMFPR="..cfgs.ApCliPMFMFPR)
+	os.execute("iwpriv "..vifname.." set ApCliPMFSHA256=0")
 	if cfgs.ApCliAuthMode == "WEP" then
 		os.execute("#iwpriv "..vifname.." set ApCliDefaultKeyID="..cfgs.ApCliDefaultKeyID)
 		os.execute("#iwpriv "..vifname.." set ApCliKey1="..cfgs.ApCliKey1Str)
 	elseif cfgs.ApCliAuthMode == "WPAPSK"
 		or cfgs.ApCliAuthMode == "WPA2PSK"
-		or cfgs.ApCliAuthMode == "WPA3PSK"
-		or cfgs.ApCliAuthMode == "WPAPSKWPA2PSK"
-		or cfgs.ApCliAuthMode == "WPA2PSKWPA3PSK" then
+		or cfgs.ApCliAuthMode == "WPA3PSK" then
 		os.execute("iwpriv "..vifname.." set ApCliWPAPSK="..cfgs.ApCliWPAPSK)
 	end
 	os.execute("iwpriv "..vifname.." set ApCliSsid=\""..cfgs.ApCliSsid.."\"")
 	os.execute("iwpriv "..vifname.." set ApCliEnable=1")
-	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
+	__mtkwifi_save_apcli(devname)
+	os.execute("sleep 5")
 end
 
 function apcli_disconnect(dev, vif)
@@ -689,5 +848,5 @@ function apcli_disconnect(dev, vif)
 	mtkwifi.save_profile(cfgs, profiles[devname])
 	os.execute("iwpriv "..vifname.." set ApCliEnable=0")
 	os.execute("ifconfig "..vifname.." down")
-	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
+	__mtkwifi_save_apcli(devname)
 end

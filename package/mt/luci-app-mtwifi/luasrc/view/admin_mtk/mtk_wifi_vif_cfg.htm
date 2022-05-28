@@ -7,7 +7,12 @@
   translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
   Hua Shao <nossiac@163.com>
+  --------------------------------------------------
+
+  For MT7615 and driver version 5.1.0.0
+  https://github.com/Azexios/openwrt-r3p-mtk
 -->
+
 <%
 local disp = require "luci.dispatcher"
 local path  = disp.context.path
@@ -38,6 +43,14 @@ local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
 %>
 
 <style type="text/css">
+table {
+  border-collapse:separate;
+  border-spacing:9px 5px
+}
+.he1 {
+ margin-left:8px;
+ white-space:pre;
+}
 @media screen and (max-device-width: 600px) {
  header .pull-right {
   flex:none;
@@ -47,12 +60,19 @@ local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
   margin:.2em 5px .2em auto;
   padding:0
  }
+ input,
+ textarea,
+ select,
+ .cbi-dropdown > ul > li {
+  font-size:1em!important;
+  height:30px;
+ }
 }
 </style>
 
 <div id="loading" style="margin-top: 1em; display: none;">
 <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" />
-	&nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
+	&nbsp;&nbsp;&nbsp; Please waiting......
 </div>
 
 <form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_cfg", devname, vifname)%>" enctype="multipart/form-data" autocomplete="off">
@@ -139,8 +159,7 @@ end
 			<td>
 			<select name="__wpa_encrypttype" id="__wpa_encrypttype" cfg="EncrypType">
 			<% for _,v in ipairs(dev.WPA_Enc_List) do %>
-				<option value="<%=v%>" <% if vif.__encrypttype==v then %>selected="selected" <% end %>><%=v%>
-				</option>
+				<option value="<%=v%>" <% if vif.__encrypttype==v then %>selected="selected" <% end %>><%=v%></option>
 			<% end %>
 			</select>
 			</td>
@@ -150,19 +169,17 @@ end
 		<tr>
 			<td>WPA Algorithm</td>
 			<td>
-			<select name="__wpa_encrypttype3" id="__wpa_encrypttype3" cfg="EncrypType">
-			<%v="AES"%>
-				<option value="<%=v%>" <% if vif.__encrypttype==v then %>selected="selected" <% end %>><%=v%>
-				</option>
+			<select name="wpacommon3" disabled="disabled">
+				<option selected="selected">AES</option>
 			</select>
 			</td>
 		</tr>
 		</tbody>
 		<tbody id="key_r" style="display:none;">
 		<tr>
-			<td>Key Renewal Interval &ensp;</td>
+			<td>Key Renewal Interval</td>
 			<td>
-			<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /> second(s) (0 ~ 4194303, default 3600)
+			<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /><span class="he1">second(s) (0 ~ 4194303, default 86400)</span>
 			</td>
 		</tr>
 		</tbody>
@@ -262,7 +279,7 @@ end
 		<tr>
 			<td>PMK Cache Period</td>
 			<td>
-			<input value="<%=vif.__pmkcacheperiod%>" type="text" name="__pmkcacheperiod" id="__pmkcacheperiod" cfg="PMKCachePeriod" /> minute(s)
+			<input value="<%=vif.__pmkcacheperiod%>" type="text" name="__pmkcacheperiod" id="__pmkcacheperiod" cfg="PMKCachePeriod" /><span class="he1">minute(s)</span>
 			</td>
 		</tr>
 		<tr>
@@ -275,27 +292,55 @@ end
 			</td>
 		</tr>
 		</tbody>
-		<tbody id="PMF" style="display:none;">
+		<tbody id="MFP" style="display:none;">
 		<tr>
-			<td>MFPC </td>
-			<td> <input name="__pmfmfpc" id="__pmfmfpc" value="1"
-			<% if mtkwifi.token_get(cfgs["PMFMFPC"], vifidx, 0) == "1" then %>
-			checked="checked"
-			<% end %> type="checkbox" /> </td>
+			<td>802.11w MFP</td>
+			<td>
+			<select style="width:auto" name="__mfp" id="__mfp">
+				<option value="0" <% if vif.__mfpc == "0" and vif.__mfpr == "0" then %>selected="selected"<% end%>>Disabled</option>
+				<option value="1" <% if vif.__mfpc == "1" and vif.__mfpr == "1" then %>selected="selected"<% end%>>Required</option>
+				<option value="2" <% if vif.__mfpc == "1" and vif.__mfpr == "0" then %>selected="selected"<% end%>>Optional</option>
+			</select>
+			</td>
 		</tr>
-		<tr>
-			<td>MFPR </td>
-			<td> <input name="__pmfmfpr" id="__pmfmfpr" value="1"
-			<% if mtkwifi.token_get(cfgs["PMFMFPR"], vifidx, 0) == "1" then %>
-			checked="checked"
-			<% end %> type="checkbox" /></td>
-		</tr>
+<!--
 		<tr>
 			<td>MFPSHA256 </td>
 			<td> <input name="__pmfsha256" id="__pmfsha256" value="1"
 			<% if mtkwifi.token_get(cfgs["PMFSHA256"], vifidx, 0) == "1" then %>
 			checked="checked"
 			<% end %> type="checkbox" /> </td>
+		</tr>
+-->
+		</tbody>
+		<tbody id="MFP2" style="display:none;">
+		<tr>
+			<td>802.11w MFP</td>
+			<td>
+			<select style="width:auto" name="MFP2" disabled="disabled">
+				<option selected="selected">Optional</option>
+			</select>
+			</td>
+		</tr>
+		</tbody>
+		<tbody id="MFP3" style="display:none;">
+		<tr>
+			<td>802.11w MFP</td>
+			<td>
+			<select style="width:auto" name="MFP3" disabled="disabled">
+				<option selected="selected">Required</option>
+			</select>
+			</td>
+		</tr>
+		</tbody>
+		<tbody id="MFP4" style="display:none;">
+		<tr>
+			<td>802.11w MFP</td>
+			<td>
+			<select style="width:auto" name="MFP4" disabled="disabled">
+				<option selected="selected">Disabled</option>
+			</select>
+			</td>
 		</tr>
 		</tbody>
 		<tbody id="IEEE8021X" style="display:none;">
@@ -328,13 +373,13 @@ end
 		<tr>
 			<td>Session Timeout</td>
 			<td>
-			<input value="<%=mtkwifi.token_get(cfgs.session_timeout_interval, vifidx, 0)%>" type="text" name="__session_timeout_interval" id="__session_timeout_interval" /> second(s)
+			<input value="<%=mtkwifi.token_get(cfgs.session_timeout_interval, vifidx, 0)%>" type="text" name="__session_timeout_interval" id="__session_timeout_interval" /><span class="he1">second(s)</span>
 			</td>
 		</tr>
 		<tr>
 			<td>Idle Timeout</td>
 			<td>
-			<input value="<%=cfgs.idle_timeout_interval%>" type="text" name="idle_timeout_interval" id="idle_timeout_interval" /> second(s)
+			<input value="<%=cfgs.idle_timeout_interval%>" type="text" name="idle_timeout_interval" id="idle_timeout_interval" /><span class="he1">second(s)</span>
 			</td>
 		</tr>
 		</tbody>
@@ -358,7 +403,7 @@ end
 			</td>
 		</tr>
 		<tr>
-			<td>WMM Capable</td>
+			<td>WMM QoS</td>
 			<td>
 			<input name="__wmmcapable" cfg="WmmCapable" value="1"
 			<% if vif.__wmmcapable ~= "0" then %>
@@ -366,12 +411,14 @@ end
 			<% end %> type="checkbox" />
 			</td>
 		</tr>
+<!--
 		<tr>
 			<td>TX Rate</td>
 			<td>
 			<input value="<%=vif.__txrate or 0%>" name="__txrate" id="__txrate" />
 			</td>
 		</tr>
+-->
 		</tbody>
 		<tfoot>
 		<tr>
@@ -385,11 +432,13 @@ end
 	<div class="cbi-page-actions">
 		<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
 		<input class="cbi-button cbi-button-positive" value="Save" type="submit" />
-		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='wifi_reload()' />
+		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='save_apply()' />
 		<input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
 	</div>
 <% end %> <!-- if not dev -->
 </form>
+
+
 <script type="text/javascript">
 function wifi_reload(url) {
 	window.scrollTo(0, 0);
@@ -402,6 +451,11 @@ function wifi_reload(url) {
 			window.location.reload();
 		}
 	);
+}
+
+function save_apply() {
+	window.scrollTo(0, 0);
+	document.getElementById('loading').style.display="";
 }
 
 function AuthMode_onchange(to) {
@@ -429,6 +483,7 @@ function AuthMode_onchange(to) {
 			if (e) e.style.display = "none";
 		}
 	}
+	
 	if (to == "WPA2" || to == "IEEE8021X" || to == "WPA1WPA2") {
 		document.getElementById("radius").style.display = "";
 	} else {
@@ -439,31 +494,51 @@ function AuthMode_onchange(to) {
 	} else {
 		document.getElementById("radius").style.display = "none";
 	}
-	if (to == "WPA2" || to == "WPA2PSK" || to == "WPA3PSK" || to == "WPAPSKWPA2PSK" || to == "WPA2PSKWPA3PSK" || to == "OWE" || to == "WPA1WPA2") {
-		if (to != "WPAPSKWPA2PSK") {
-			document.getElementById("PMF").style.display = "";
-		} else {
-			document.getElementById("PMF").style.display = "none";
-		}
+	
+	if (to == "WPA2" || to == "WPA2PSK" || to == "WPA1WPA2") {
+		document.getElementById("MFP").style.display = "";
+	} else {
+		document.getElementById("MFP").style.display = "none";
 	}
-	if (to == "WPA2" || to == "WPA2PSK" || to == "WPAPSKWPA2PSK" || to == "WPA1WPA2" || to == "WPA3PSK" || to == "WPA2PSKWPA3PSK" || to == "OWE") {
+	if (to == "WPA2PSKWPA3PSK") {
+		document.getElementById("MFP2").style.display = "";
+	} else {
+		document.getElementById("MFP2").style.display = "none";
+	}
+	if (to == "WPA3PSK" || to == "OWE") {
+		document.getElementById("MFP3").style.display = "";
+	} else {
+		document.getElementById("MFP3").style.display = "none";
+	}
+	if (to == "IEEE8021X" || to == "WPAPSKWPA2PSK") {
+		document.getElementById("MFP4").style.display = "";
+	} else {
+		document.getElementById("MFP4").style.display = "none";
+	}
+	
+	if (to == "WPA2" || to == "WPA2PSK" || to == "WPAPSKWPA2PSK" || to == "WPA1WPA2" || to == "WPA3PSK" || to == "WPA2PSKWPA3PSK") {
 		document.getElementById("key_r").style.display = "";
-		if (to == "WPA3PSK" || to == "WPA2PSKWPA3PSK" || to == "OWE") {
-			document.getElementById("wpacommon").style.display = "none";
-			document.getElementById("wpacommon3").style.display = "";
-		} else {
-			document.getElementById("wpacommon3").style.display = "none";
-			document.getElementById("wpacommon").style.display = "";
-		}
+	} else {
+		document.getElementById("key_r").style.display = "none";
+	}
+	
+	if (to == "WPA2" || to == "WPA2PSK" || to == "WPAPSKWPA2PSK" || to == "WPA1WPA2") {
+		document.getElementById("wpacommon").style.display = "";
 	} else {
 		document.getElementById("wpacommon").style.display = "none";
+	}	
+	if (to == "WPA3PSK" || to == "WPA2PSKWPA3PSK" || to == "OWE") {
+		document.getElementById("wpacommon3").style.display = "";
+	} else {
 		document.getElementById("wpacommon3").style.display = "none";
 	}
-	if (to == "WPA2" || to == "WPA2PSK" || to == "WPA3PSK" || to == "WPAPSKWPA2PSK" || to == "WPA2PSKWPA3PSK") {
+
+	if (to == "WPA2PSK" || to == "WPA3PSK" || to == "WPAPSKWPA2PSK" || to == "WPA2PSKWPA3PSK") {
 		document.getElementById("WPA2PSK").style.display = "";
 	}
 }
 
 window.onload = AuthMode_onchange(document.getElementById("AuthMode").options[document.getElementById("AuthMode").selectedIndex].value)
 </script>
+
 <%+footer%>

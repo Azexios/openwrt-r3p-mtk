@@ -7,7 +7,12 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
+	--------------------------------------------------
+ 
+	For MT7615 and driver version 5.1.0.0
+	https://github.com/Azexios/openwrt-r3p-mtk
 -->
+
 <%
 local disp = require "luci.dispatcher"
 -- local request  = disp.context.path
@@ -36,6 +41,10 @@ local debug = 0
 %>
 
 <style type="text/css">
+table {
+  border-collapse:separate;
+  border-spacing:9px 5px
+}
 @media screen and (max-device-width: 600px) {
  header .pull-right {
   flex:none;
@@ -45,12 +54,19 @@ local debug = 0
   margin:.2em 5px .2em auto;
   padding:0
  }
+ input,
+ textarea,
+ select,
+ .cbi-dropdown > ul > li {
+  font-size:1em!important;
+  height:30px;
+ }
 }
 </style>
 
 <div id="loading" style="margin-top: 1em; display: none;">
 <img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" />
-	&nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
+	&nbsp;&nbsp;&nbsp; Please waiting......
 </div>
 
 <form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg", devname, vifname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
@@ -58,10 +74,16 @@ local debug = 0
 	<fieldset class="cbi-section" id="vif-cfg-apcli">
 		<legend> <a name="apcli_scan_section">Wireless Repeater - <%=devname.."@"..vifname%> </a></legend>
 		<br />
+		<% if cfgs.WirelessMode == "10" then %>
+		<p class="left">
+			<input disabled="disabled" id="scan" type="button" class="cbi-button cbi-button-find" onclick="get_ap_list('<%=vifname%>')" value="Scan Wireless Network" /><span style="color:red;">&ensp; Search does not work if Mode is selected "10 - G/N mixed".</span>
+		</p>
+		<% else %>
 		<p class="left">
 			<input id="scan" type="button" class="cbi-button cbi-button-find" onclick="get_ap_list('<%=vifname%>')" value="Scan Wireless Network" />
 		</p>
-		<div id="loading" style="display:none;">
+		<% end %>
+		<div id="loading2" style="display:none;">
 		<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle;" />
 			&nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
 		</div>
@@ -85,10 +107,10 @@ local debug = 0
 				<td>
 					<input type="text" name="Channel" id="Channel" value="<%=cfgs.Channel%>"/>
 				</td>
-				<td> <span style="color:red;">&ensp; This will overwrite ap channel.</span></td>
+				<td> <span style="color:red;">This will overwrite ap channel.</span></td>
 			</tr>
 			<tr>
-				<td>Root AP Authentication Mode &ensp;</td>
+				<td>Root AP Authentication Mode</td>
 				<td>
 					<select name="ApCliAuthMode" cfg="ApCliAuthMode" id="ApCliAuthMode" onchange="ApCliAuthMode_onchange(this.options[this.options.selectedIndex].value)">
 						<% for _,v in ipairs(dev.ApCliAuthModeList) do %>
@@ -126,10 +148,8 @@ local debug = 0
 			<tr>
 				<td>Root AP Encryption</td>
 				<td>
-					<select name="_wpa_ApCliEncrypType3" id="_wpa_ApCliEncrypType3" >
-					<%v="AES"%>
-						<option value="<%=v%>" <% if cfgs.ApCliEncrypType==v then %>selected="selected" <% end %>><%=v%>
-						</option>
+					<select name="apcli_wpa3" disabled="disabled">
+						<option selected="selected">AES</option>
 					</select>
 				</td>
 			</tr>
@@ -168,170 +188,162 @@ local debug = 0
 	<div class="cbi-page-actions" id="apcli_form_buttons">
 		<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
 		<input class="cbi-button cbi-button-positive" value="Save" type="submit" />
-		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='wifi_reload()' />
+		<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='save_apply()' />
 		<input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
 	</div>
 </form>
 
+
 <script type="text/javascript">
-	function wifi_reload(url) {
-		window.scrollTo(0, 0);
-		document.getElementById('loading').style.display="";
-		XHR.get(url, null,
-			function(x)
-			{
-				console.log(x);
-				document.getElementById("loading").style.display="none";
-				window.location.reload();
-			}
-		);
-	}
+function save_apply() {
+	window.scrollTo(0, 0);
+	document.getElementById('loading').style.display="";
+}
 
+function decode_ssid(ssid)
+{
+	ssid = ssid.replace(/&amp;/g, "&");
+	ssid = ssid.replace(/&lt;/g, "<");
+	ssid = ssid.replace(/&gt;/g, ">");
+	ssid = ssid.replace(/&#34;/g, "\"");
+	ssid = ssid.replace(/&#39;/g, "'");
+	ssid = ssid.replace(/&nbsp;/g, " ");
+	var patt = new RegExp(/&#(\d+);/);
 
-	function decode_ssid(ssid)
+	while (res = patt.exec(ssid))
 	{
-		ssid = ssid.replace(/&amp;/g, "&");
-		ssid = ssid.replace(/&lt;/g, "<");
-		ssid = ssid.replace(/&gt;/g, ">");
-		ssid = ssid.replace(/&#34;/g, "\"");
-		ssid = ssid.replace(/&#39;/g, "'");
-		ssid = ssid.replace(/&nbsp;/g, " ");
-		var patt = new RegExp(/&#(\d+);/);
-
-		while (res = patt.exec(ssid))
-		{
-			ssid = ssid.replace("&#" + res[1] + ";", String.fromCharCode(res[1]));
-		}
-		return ssid;
+		ssid = ssid.replace("&#" + res[1] + ";", String.fromCharCode(res[1]));
 	}
+	return ssid;
+}
 
-	var ap_list;
-	function create_ap_table (aplist) {
-		var table = document.createElement('table');
-		table.setAttribute("id", "aplist_table");
-		for (i in aplist) {
-			var tr = table.insertRow(i);
-			var td0 = tr.insertCell(0);
-			td0.innerHTML = aplist[i].ssid;
-			var td1 = tr.insertCell(1);
-			td1.innerHTML = aplist[i].channel;
-			var td2 = tr.insertCell(2);
-			td2.innerHTML = aplist[i].bssid;
-			var td3 = tr.insertCell(3);
-			td3.innerHTML = aplist[i].security;
-			var td4 = tr.insertCell(4);
-			td4.innerHTML = aplist[i].rssi;
-			var td5 = tr.insertCell(5);
-			if (aplist[i].authmode == "OPEN"
-			 || aplist[i].authmode == "OWE"
-			 || aplist[i].authmode == "WPAPSK"
-			 || aplist[i].authmode == "WPA2PSK"
-			 || aplist[i].authmode == "WPA3PSK"
-			 || aplist[i].authmode == "WPA2PSKWPA3PSK"
-			 || aplist[i].authmode == "WPAPSKWPA2PSK") {
-				td5.innerHTML = '<a href="javascript:choose_rootap(\''+i+'\')" >Choose This</a>';
-
-			} else {
-				td5.innerHTML = 'Security Not Supported';
-			}
-		}
-
-		var tr = table.insertRow(0);
+var ap_list;
+function create_ap_table (aplist) {
+	var table = document.createElement('table');
+	table.setAttribute("id", "aplist_table");
+	for (i in aplist) {
+		var tr = table.insertRow(i);
 		var td0 = tr.insertCell(0);
-		td0.innerHTML = '<strong>SSID &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
+		td0.innerHTML = aplist[i].ssid;
 		var td1 = tr.insertCell(1);
-		td1.innerHTML = '<strong>Channel &emsp;</strong>';
+		td1.innerHTML = aplist[i].channel;
 		var td2 = tr.insertCell(2);
-		td2.innerHTML = '<strong>BSSID &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
+		td2.innerHTML = aplist[i].bssid;
 		var td3 = tr.insertCell(3);
-		td3.innerHTML = '<strong>Security &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</strong>';
+		td3.innerHTML = aplist[i].security;
 		var td4 = tr.insertCell(4);
-		td4.innerHTML = '<strong>RSSI &emsp;</strong>';
+		td4.innerHTML = aplist[i].rssi;
 		var td5 = tr.insertCell(5);
-		td5.innerHTML = '<strong>Action</strong>';
-
-		var div = document.getElementById('aplist');
-		div.innerHTML = "";
-		div.appendChild(table);
-	}
-
-	function get_ap_list(vifname) {
-
-		document.getElementById("loading").style.display="";
-
-		XHR.get('<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_scan")%>/' + vifname, null,
-			function(x)
-			{
-				console.log(x)
-				ap_list = eval(x.response);
-				console.log(ap_list);
-				create_ap_table(ap_list);
-				document.getElementById("loading").style.display="none";
-			}
-		);
-	}
-
-	function ApCliAuthMode_onchange (to) {
-		if (to == "WPA2PSK"
-		 || to == "WPAPSK"
-		 || to == "WPAPSKWPA2PSK") {
-			document.getElementById("apcli_wpa").style.display="";
-			document.getElementById("apcli_wpa3").style.display="none";
-			document.getElementById("apcli_wpa_key").style.display="";
-			document.getElementById("apcli_wep").style.display="none";
-		} else if (to == "WPA3PSK" || to == "WPA2PSKWPA3PSK") {
-			document.getElementById("apcli_wpa").style.display="none";
-			document.getElementById("apcli_wpa3").style.display="";
-			document.getElementById("apcli_wpa_key").style.display="";
-			document.getElementById("apcli_wep").style.display="none";
-		} else if (to == "OWE") {
-			document.getElementById("apcli_wpa").style.display="none";
-			document.getElementById("apcli_wpa3").style.display="";
-			document.getElementById("apcli_wpa_key").style.display="none";
-			document.getElementById("apcli_wep").style.display="none";
-		} else if (to == "OPEN" || to == "SHARED") {
-			document.getElementById("apcli_wpa").style.display="none";
-			document.getElementById("apcli_wpa3").style.display="none";
-			document.getElementById("apcli_wpa_key").style.display="none";
-			document.getElementById("apcli_wep").style.display="";
+		if (aplist[i].authmode == "OPEN"
+		 || aplist[i].authmode == "OWE"
+		 || aplist[i].authmode == "WPAPSK"
+		 || aplist[i].authmode == "WPA2PSK"
+		 || aplist[i].authmode == "WPA3PSK"
+		 || aplist[i].authmode == "WPA2PSKWPA3PSK"
+		 || aplist[i].authmode == "WPAPSKWPA2PSK") {
+			td5.innerHTML = '<a href="javascript:choose_rootap(\''+i+'\')" >Choose This</a>';
 		} else {
-			document.getElementById("apcli_wpa").style.display="none";
-			document.getElementById("apcli_wpa3").style.display="none";
-			document.getElementById("apcli_wpa_key").style.display="none";
-			document.getElementById("apcli_wep").style.display="none";
+			td5.innerHTML = 'Security Not Supported';
 		}
 	}
 
-	function choose_rootap(index) {
-		document.getElementById("ApCliSsid").value=decode_ssid(ap_list[index].ssid);
-		document.getElementById("Channel").value=ap_list[index].channel;
-		document.getElementById("ApCliAuthMode").value=ap_list[index].authmode;
-		if (ap_list[index].authmode == "WPA2PSK"
-		 || ap_list[index].authmode == "WPAPSK"
-		 || ap_list[index].authmode == "WPAPSKWPA2PSK") {
-			document.getElementById("_wpa_ApCliEncrypType").value=ap_list[index].encrypttype;
-		} else if (ap_list[index].authmode == "WPA3PSK" || ap_list[index].authmode == "WPA2PSKWPA3PSK" || ap_list[index].authmode == "OWE") {
-			document.getElementById("_wpa_ApCliEncrypType3").value=ap_list[index].encrypttype;
-		} else if (ap_list[index].authmode == "OPEN" || ap_list[index].authmode == "SHARED") {
-			if (ap_list[index].encrypttype == "NONE")
-			{
-				document.getElementById("ApCliAuthMode").value="Disable";
-			}
-			else
-			{
-				document.getElementById("_wep_ApCliEncrypType").value=ap_list[index].encrypttype;
-			}
+	var tr = table.insertRow(0);
+	var td0 = tr.insertCell(0);
+	td0.innerHTML = '<strong style="margin-right:140px;">SSID</strong>';
+	var td1 = tr.insertCell(1);
+	td1.innerHTML = '<strong style="margin-right:10px;">Channel</strong>';
+	var td2 = tr.insertCell(2);
+	td2.innerHTML = '<strong style="margin-right:100px;">BSSID</strong>';
+	var td3 = tr.insertCell(3);
+	td3.innerHTML = '<strong style="margin-right:150px;">Security</strong>';
+	var td4 = tr.insertCell(4);
+	td4.innerHTML = '<strong>RSSI &emsp;</strong>';
+	var td5 = tr.insertCell(5);
+	td5.innerHTML = '<strong>Action</strong>';
+
+	var div = document.getElementById('aplist');
+	div.innerHTML = "";
+	div.appendChild(table);
+}
+
+function get_ap_list(vifname) {
+
+	document.getElementById("loading2").style.display="";
+
+	XHR.get('<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_scan")%>/' + vifname, null,
+		function(x)
+		{
+			console.log(x)
+			ap_list = eval(x.response);
+			console.log(ap_list);
+			create_ap_table(ap_list);
+			document.getElementById("loading2").style.display="none";
 		}
-		ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").value);
-		document.getElementById("ApCliWPAPSK").value="";
-		document.getElementById("ApCliKey1Str").value="";
-		location.href="#apcli_cfg_section";
+	);
+}
+
+function ApCliAuthMode_onchange(to) {
+	if (to == "WPA2PSK" || to == "WPAPSK") {
+		document.getElementById("apcli_wpa").style.display="";
+		document.getElementById("apcli_wpa3").style.display="none";
+		document.getElementById("apcli_wpa_key").style.display="";
+		document.getElementById("apcli_wep").style.display="none";
+	} else if (to == "WPA3PSK") {
+		document.getElementById("apcli_wpa").style.display="none";
+		document.getElementById("apcli_wpa3").style.display="";
+		document.getElementById("apcli_wpa_key").style.display="";
+		document.getElementById("apcli_wep").style.display="none";
+	} else if (to == "OWE") {
+		document.getElementById("apcli_wpa").style.display="none";
+		document.getElementById("apcli_wpa3").style.display="";
+		document.getElementById("apcli_wpa_key").style.display="none";
+		document.getElementById("apcli_wep").style.display="none";
+	} else if (to == "OPEN" || to == "SHARED") {
+		document.getElementById("apcli_wpa").style.display="none";
+		document.getElementById("apcli_wpa3").style.display="none";
+		document.getElementById("apcli_wpa_key").style.display="none";
+		document.getElementById("apcli_wep").style.display="";
+	} else {
+		document.getElementById("apcli_wpa").style.display="none";
+		document.getElementById("apcli_wpa3").style.display="none";
+		document.getElementById("apcli_wpa_key").style.display="none";
+		document.getElementById("apcli_wep").style.display="none";
 	}
+}
 
-	window.onload = function() {
-		ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").value);
-	 }
+function choose_rootap(index) {
+	document.getElementById("ApCliSsid").value=decode_ssid(ap_list[index].ssid);
+	document.getElementById("Channel").value=ap_list[index].channel;
+	if (ap_list[index].authmode == "WPA3PSK" || ap_list[index].authmode == "WPA2PSKWPA3PSK") {
+		document.getElementById("ApCliAuthMode").value="WPA3PSK";
+	} else if (ap_list[index].authmode == "WPA2PSK" || ap_list[index].authmode == "WPAPSKWPA2PSK") {
+		document.getElementById("ApCliAuthMode").value="WPA2PSK";
+	} else if (ap_list[index].authmode == "OWE") {
+		document.getElementById("ApCliAuthMode").value="OWE";
+	} else {
+	document.getElementById("ApCliAuthMode").value=ap_list[index].authmode;
+	}
+	if (ap_list[index].authmode == "WPA2PSK"
+	 || ap_list[index].authmode == "WPAPSK"
+	 || ap_list[index].authmode == "WPAPSKWPA2PSK") {
+		document.getElementById("_wpa_ApCliEncrypType").value=ap_list[index].encrypttype;
+	} else if (ap_list[index].authmode == "OPEN" || ap_list[index].authmode == "SHARED") {
+		if (ap_list[index].encrypttype == "NONE")
+		{
+			document.getElementById("ApCliAuthMode").value="Disable";
+		}
+		else
+		{
+			document.getElementById("_wep_ApCliEncrypType").value=ap_list[index].encrypttype;
+		}
+	}
+	ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").value);
+	document.getElementById("ApCliWPAPSK").value="";
+	document.getElementById("ApCliKey1Str").value="";
+	location.href="#apcli_cfg_section";
+}
 
+window.onload = ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").options[document.getElementById("ApCliAuthMode").selectedIndex].value)
 </script>
 
 <%+footer%>

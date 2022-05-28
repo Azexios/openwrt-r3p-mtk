@@ -1,3 +1,4 @@
+
 <%+header%>
 <!--
 	This module is a demo to configure MTK' proprietary WiFi driver.
@@ -6,20 +7,43 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
+	--------------------------------------------------
+ 
+	For MT7615 and driver version 5.1.0.0
+	https://github.com/Azexios/openwrt-r3p-mtk
 -->
+
 <%
 local mtkwifi = require("mtkwifi")
+local mtkwifis = require("mtkwifis")
 local devs = mtkwifi.get_all_devs()
 %>
 
 <style type="text/css">
 #container {visibility: hidden;}
-.table2 {
-  word-spacing: 100vw;
+.a1 {
+ margin-left:30px;
+ white-space:pre;
+}
+.b1 {
+ margin-left:30px;
+ white-space:pre;
+}
+.m2 {
+ white-space:pre;
 }
 table {
-  border-collapse:separate;
-  border-spacing:3px 5px
+ border-collapse:separate;
+ border-spacing:3px 5px
+}
+@media screen and (min-device-width: 601px) {
+ .ar1 {
+  margin-left:30px;
+  white-space:pre;
+ }
+ .ar1m {
+  display:none;
+ }
 }
 @media screen and (max-device-width: 600px) {
  header h3 a,
@@ -44,6 +68,19 @@ table {
   margin:.2em 5px .2em auto;
   padding:0
  }
+ .a1 {
+  margin-left:8px;
+ }
+ .b1 {
+  display:none;
+ }
+ .ar1 {
+  display:none;
+ }
+ .ar1m {
+  margin-left:8px;
+  white-space:pre;
+ }
 }
 </style>
 	
@@ -54,7 +91,7 @@ table {
 	
 	<div id="loading" style="margin-top: 1em; display: none;">
 	<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" />
-		&nbsp;&nbsp;&nbsp; Please waiting while the page is loading......
+		&nbsp;&nbsp;&nbsp; Please waiting......
 	</div>
 
 	<% if #devs == 0 then %>
@@ -74,16 +111,21 @@ table {
 					</td>
 					<td colspan="2" style="text-align:left">
 						<big><strong title="<%=dev.profile%>"> Generic Mediatek <%=dev.devname%></strong></big>
-						<%
-						local diff = mtkwifi.diff_profile(dev.profile)
-						%>
 						<br/>
 						<span><strong>Work mode:</strong>  <% if dev.ApCliEnable == "1" then %> APCli <% else %> Master AP<% end %> </span>
+						<%
+						local diff = mtkwifi.diff_profile(dev.profile)
+						if next(diff) ~= nil then
+						%>
+							<br/><span style="color:red;">* need reload to apply changes</span>
+						<% 
+						end
+						%>
 					</td>
 					<td style="width:330px;text-align:right">
 						<input class="cbi-button cbi-button-reload" style="width:100px" title="Reload Wi-Fi network" value="Reload" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", dev.devname)%>");' />
 						<input class="cbi-button cbi-button-edit" style="width:100px" title="Configure Wi-Fi device" value="Config" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg_view", dev.devname)%>'" />
-						<input class="cbi-button cbi-button-add" style="width:100px" title="Add Wi-Fi network" value="Add" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_add_view", dev.devname,dev.vifs.__prefix)%>'" />
+						<input class="cbi-button cbi-button-add" style="width:100px" title="Add Wi-Fi network" value="Add" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_add_view", dev.devname, dev.vifs.__prefix)%>'" />
 					</td>
 				</tr>
 				<!-- /physical device -->
@@ -127,7 +169,7 @@ table {
 					<td class="cbi-value-field" style="width:16px; padding:3px">
 						<% if dev.apcli.state == "up" then %>
 							<% if dev.apcli.status == "Connected" then %>
-							<img src="/luci-static/resources/icons/signal-75-100.png" />							
+							<img src="/luci-static/resources/icons/signal-75-100.png" />
 							<% else %>
 							<img src="/luci-static/resources/icons/signal-0.png" />
 							<% end %>
@@ -152,11 +194,11 @@ table {
 					</td>
 					<td style="text-align:right">
 						<% if dev.apcli.state == "up" then %>
-						<input class="cbi-button cbi-button-reload" style="width:100px" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname,dev.apcli.vifname)%>")' />
+						<input class="cbi-button cbi-button-reload" style="width:100px" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
 						<input class="cbi-button cbi-button-remove" style="width:100px" title="Disable Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
 						<% else %>
-						<input class="cbi-button cbi-button-reload" style="width:100px" disabled="disabled" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname,dev.apcli.vifname)%>")' />
-						<input class="cbi-button cbi-button-reload" style="width:100px" title="Enable Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname,dev.apcli.vifname)%>")' />
+						<input class="cbi-button cbi-button-reload" style="width:100px" disabled="disabled" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
+						<input class="cbi-button cbi-button-reload" style="width:100px" title="Enable Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
 						<% end %>
 						<input class="cbi-button cbi-button-edit" style="width:100px" title="Configure Wi-Fi device" value="Config" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg_view", dev.devname, dev.apcli.vifname)%>'" />
 					</td>
@@ -178,33 +220,35 @@ table {
 		</table>
 	</fieldset>
 
-	<%=dme%>
 	<fieldset class="cbi-section">
 	<table align="left">
 		<thead>
 			<tr style="text-align:left">
-				<th style="width:160px">MAC-Address</th>
-				<th style="width:130px">RSSI - 0/1/2/3</th>
-				<th style="width:100px">BW (T/R)</th>
-				<th style="width:100px">Rate (T/R) Mb/s</th>
+				<th>MAC-Address</th>
+				<th><div class="ar1">RSSI - 0/1/2/3</div><div class="ar1m">RSSI 0/1/2</div></th>
+				<th><div class="a1">BW (T/R)</div></th>
+				<th><div class="b1">MCS (T/R)</div></th>
+				<th><div class="b1">GI (T/R)</div></th>
+				<th><div class="a1">Rate (T/R)</div></th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td><div class="table2"><%=MAC%></div></td>
-				<td><div class="table2"><%=RSSI%></div></td>
-				<td><div class="table2"><%=BW%></div></td>
-				<td><div class="table2"><%=rate%></div></td>
+				<td><div class="m2"><%=MAC%></div></td>
+				<td><div class="ar1"><%=RSSI%></div><div class="ar1m"><%=RSSI_M%></div></td>
+				<td><div class="a1"><%=BW%></div></td>
+				<td><div class="b1"><%=MCS%></div></td>
+				<td><div class="b1" id="SGI"><%=SGI%></div></td>
+				<td><div class="ar1" id="rate"><%=rate%></div><div class="ar1m"><%=rate%></div></td>
 			</tr>
 		</tbody>
 	</table>
 	</fieldset>
-
 </div>
+
 
 <script src="/luci-static/resources/jquery/jquery-1.4.js"></script>
 <script type="text/javascript">
-
 function wifi_reload(url) {
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
@@ -220,7 +264,7 @@ function wifi_reload(url) {
 
 $('link[rel=stylesheet][href*="mobile.css"]').remove();
 
-function resizeTables(sharedSize){
+function resizeTables(sharedSize) {
   var tableArr = $('table[data-ss='+sharedSize+']');
   var cellWidths = new Array();
   $(tableArr).each(function() {
@@ -236,14 +280,22 @@ var cell = $($(this)[0].rows[0].cells[j]);
   });
 }
 
+function rgi() {
+  $(SGI).text($(SGI).text().replace(/1\/1/g,'Short/Short'));
+  $(SGI).text($(SGI).text().replace(/1\/0/g,'Short/Long'));
+  $(SGI).text($(SGI).text().replace(/0\/1/g,'Long/Short'));
+  $(SGI).text($(SGI).text().replace(/0\/0/g,'Long/Long'));
+  $(rate).text($(rate).text().replace(/\n/g,' Mbit/s\n'));
+}
+
 window.onload = function() {
+  rgi()
   resizeTables('1');
   setTimeout(
 	function(){
 		document.getElementById("container").style.visibility = "visible";
 	}, 100);
 }
-
 </script>
 
 <%+footer%>
