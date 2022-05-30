@@ -5,11 +5,10 @@
   Or use the "old" version - https://github.com/Azexios/openwrt-r3p-mtk/tree/old
 
 ---
-### Инструкция по сборке (In Russian)
-https://4pda.to/forum/index.php?s=&showtopic=821686&view=findpost&p=111402096
+### [Инструкция по сборке (In Russian)](README_RU.md)
 
-### Screenshot ([All](https://github.com/Azexios/openwrt-r3p-mtk/tree/main/screenshots))
-![Image alt](https://raw.githubusercontent.com/Azexios/openwrt-r3p-mtk/main/screenshots/mtk_wifi_overview.png)
+### Screenshot ([All](screenshots))
+![Image alt](screenshots/mtk_wifi_overview.png)
 
 ### Sources
 https://github.com/openwrt/openwrt  
