@@ -2,7 +2,7 @@
 
     ```bash
     cd
-    git clone [url="https://github.com/Azexios/openwrt-r3p-mtk.git"]https://github.com/Azexios/openwrt-r3p-mtk.git[/url]
+    git clone https://github.com/Azexios/openwrt-r3p-mtk.git
     rsync -av openwrt-r3p-mtk/ /home/alex/openwrt --exclude '.git' --exclude 'README.md' --exclude 'README_RU.md' --exclude 'screenshots'
     ```
 
@@ -11,7 +11,7 @@
 3. Скачать конфиг (стандартно для сборки OpenWrt с правильным .vermagiс, для mt7621) на примере 21.02.3:
 
     ```bash
-    wget -O .config [url="https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/config.buildinfo"]https://downloads.open…t7621/config.buildinfo[/url]
+    wget -O .config https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/config.buildinfo
     make defconfig
     make menuconfig
     ```
@@ -20,10 +20,10 @@
 В LuCI > Applications - выбрать luci-app-mtwifi.  
 В Network > Wireless - выставить настройки в mt_wifi из 2 пункта.  
 В Network > WirelessAPD - отключить wpad-basic-wolfssl и для hostapd-common выставить M.  
-Открыть profiles.json (для mt7621 - [url="https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/profiles.json"]https://downloads.open…s/mt7621/profiles.json[/url]), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно выбрать/включить.
+Открыть profiles.json (для mt7621 - https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/profiles.json), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно выбрать/включить.
 
 5. Выйти, сохранив настройки и собрать прошивку:
 
     ```bash
-    make -j$(($(nproc) + 1)) V=s 2>&1 | grep -i -E "^make.*(error|&#91;12345&#93;...Entering dir)"
+    make -j$(($(nproc) + 1)) V=s 2>&1 | grep -i -E "^make.*(error|[12345]...Entering dir)"
     ```
