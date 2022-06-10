@@ -1,5 +1,6 @@
 Я использую Ubuntu 22.04 (на других OS не проверял).
 
+Для MT7615+MT7615:
 1. Клонировать исходный код и перенести всё (за исключением README.md, README_RU.md, screenshots и .git) в каталог openwrt, пример (вместо /home/alex/openwrt указать свой путь до openwrt):
 
     ```bash
@@ -7,7 +8,15 @@
     git clone https://github.com/Azexios/openwrt-r3p-mtk.git
     rsync -av openwrt-r3p-mtk/ /home/alex/openwrt --exclude '.git' --exclude 'README.md' --exclude 'README_RU.md' --exclude 'screenshots'
     ```
+Для MT7603+MT7615:
+1. Клонировать ветку "7603+7615" и перенести всё (за исключением README.md, mt7603+mt7615.png и .git) в каталог openwrt, пример (вместо /home/alex/openwrt указать свой путь до openwrt):
 
+    ```bash
+    cd
+    git clone https://github.com/Azexios/openwrt-r3p-mtk.git -b 7603+7615
+    rsync -av openwrt-r3p-mtk/ /home/alex/openwrt --exclude '.git' --exclude 'README.md' --exclude 'mt7603+mt7615.png'
+    ```
+---
 2. Перейти в каталог openwrt, удалить свой .config - запустить make menuconfig, выбрать своё устройство, перейти в раздел - LuCI > Applications - выбрать luci-app-mtwifi далее в Kernel modules > Wireless Drivers > выбрать драйвер mtk и зайти в настройки драйвера (выбрать нужные параметры или использовать дефолтные настройки), запомнить настройки/сделать скриншоты и аналогично с Network > Wireless > mt_wifi - MT_WIFI Configuration.
 
 3. Скачать конфиг (стандартно для сборки OpenWrt с правильным .vermagiс, для mt7621) на примере 21.02.3:
