@@ -29,21 +29,12 @@ local devs = mtkwifi.get_all_devs()
  margin-left:30px;
  white-space:pre;
 }
-.m2 {
+.m1 {
  white-space:pre;
 }
 table {
  border-collapse:separate;
  border-spacing:3px 5px
-}
-@media screen and (min-device-width: 601px) {
- .ar1 {
-  margin-left:30px;
-  white-space:pre;
- }
- .ar1m {
-  display:none;
- }
 }
 @media screen and (max-device-width: 600px) {
  header h3 a,
@@ -68,18 +59,8 @@ table {
   margin:.2em 5px .2em auto;
   padding:0
  }
- .a1 {
-  margin-left:8px;
- }
  .b1 {
   display:none;
- }
- .ar1 {
-  display:none;
- }
- .ar1m {
-  margin-left:8px;
-  white-space:pre;
  }
 }
 </style>
@@ -225,21 +206,23 @@ table {
 		<thead>
 			<tr style="text-align:left">
 				<th>MAC-Address</th>
-				<th><div class="ar1">RSSI - 0/1/2/3</div><div class="ar1m">RSSI 0/1/2</div></th>
-				<th><div class="a1">BW (T/R)</div></th>
+				<th><div class="a1">Hostname - IPv4 (DHCP)</div></th>
+				<th><div class="b1">RSSI - 0/1/2/3</div></th>
+				<th><div class="b1">BW (T/R)</div></th>
 				<th><div class="b1">MCS (T/R)</div></th>
 				<th><div class="b1">GI (T/R)</div></th>
-				<th><div class="a1">Rate (T/R)</div></th>
+				<th><div class="b1">Rate (T/R)</div></th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td><div class="m2"><%=MAC%></div></td>
-				<td><div class="ar1"><%=RSSI%></div><div class="ar1m"><%=RSSI_M%></div></td>
-				<td><div class="a1"><%=BW%></div></td>
+				<td><div class="m1"><%=MAC%></div></td>
+				<td><div class="a1"><%=Host%></div></td>
+				<td><div class="b1"><%=RSSI%></div></div></td>
+				<td><div class="b1"><%=BW%></div></td>
 				<td><div class="b1"><%=MCS%></div></td>
 				<td><div class="b1" id="SGI"><%=SGI%></div></td>
-				<td><div class="ar1" id="rate"><%=rate%></div><div class="ar1m"><%=rate%></div></td>
+				<td><div class="b1" id="rate"><%=Rate%></div></td>
 			</tr>
 		</tbody>
 	</table>
