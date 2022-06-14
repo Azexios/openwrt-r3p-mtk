@@ -13,13 +13,12 @@ function mtkwifis.read_pipe(pipe)
 	return txt
 end
 
-dme = mtkwifis.read_pipe("dmesg -c > /dev/null && iwpriv ra0 show stainfo 2>/dev/null & iwpriv rai0 show stainfo 2>/dev/null")
-os.execute("sleep 0.5")
+dme = mtkwifis.read_pipe("dmesg -c > /dev/null && iwpriv ra0 show stainfo 2>/dev/null; iwpriv rai0 show stainfo 2>/dev/null")
 MAC = mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..' 2>/dev/null") or "?"
-RSSI = mtkwifis.read_pipe("dmesg | grep -oE '([-0-9]{3,4}\\/){3}.{3,4}' 2>/dev/null") or "?"
-BW = mtkwifis.read_pipe("dmesg | grep -oE '([0-9]{2,3}[A-Z])\\/.{3,4}' 2>/dev/null" ) or "?"
-MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}[A-Z])\\/.{3,4}/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
-SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}[A-Z])\\/.{3,4}/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
+RSSI = mtkwifis.read_pipe("dmesg | grep -oE '[^] I]([-0-9 ]{1,}\\/){3}[-0-9]{1,}' 2>/dev/null") or "?"
+BW = mtkwifis.read_pipe("dmesg | grep -oE '([0-9]{2,3}M)\\/[0-9]{2,3}M' 2>/dev/null" ) or "?"
+MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
+SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
 Rate = mtkwifis.read_pipe("dmesg | awk '/0%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
 
 for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
