@@ -32,6 +32,7 @@
     ```
 ---
 #### Если нужно обновить:
+Заменить /home/alex/openwrt на свой путь до openwrt
 ```bash
 cd
 cd openwrt-r3p-mtk
