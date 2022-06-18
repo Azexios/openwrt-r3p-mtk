@@ -114,7 +114,7 @@ config MT7603E_CARRIER_DETECTION_SUPPORT
 config MT7603E_IGMP_SNOOP_SUPPORT
 	bool "IGMP Snooping"
 #    depends on WIFI_DRIVER
-	default n
+	default y
 
 config MT7603E_BLOCK_NET_IF
 	bool "NETIF Block"

@@ -37,12 +37,12 @@ define Build/Compile
 endef
 
 define Package/mt_wifi/install
-	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_DIR) $(1)/lib/wifi/
 	$(INSTALL_DIR) $(1)/etc/wireless/mt7615/
 	$(INSTALL_DIR) $(1)/etc_ro/Wireless/RT2860AP/
 	$(INSTALL_DIR) $(1)/lib/preinit/
 	$(INSTALL_DIR) $(1)/etc_ro/wlan/
+	$(INSTALL_DIR) $(1)/sbin/
 ifeq ($(CONFIG_MTK_CHIP_MT7603E_MT7612E),y)
 	$(INSTALL_DATA) ./files/7603_7612-l1profile.dat $(1)/etc/wireless/l1profile.dat
 	$(INSTALL_DATA) ./files/mt7603.dat $(1)/etc/wireless/mt7615/mt7615.1.dat
@@ -50,7 +50,7 @@ ifeq ($(CONFIG_MTK_CHIP_MT7603E_MT7612E),y)
 else ifeq ($(CONFIG_MTK_CHIP_MT7603E_MT7615E),y)
 	$(INSTALL_DATA) ./files/7603_7615-l1profile.dat $(1)/etc/wireless/l1profile.dat
 	$(INSTALL_DATA) ./files/mt7603.dat $(1)/etc/wireless/mt7615/mt7615.1.dat
-	$(INSTALL_DATA) ./files/mt7615.dat $(1)/etc/wireless/mt7615/mt7615.2.dat
+	$(INSTALL_DATA) ./files/mt7615.5G.dat $(1)/etc/wireless/mt7615/mt7615.2.dat
 else
 ifeq ($(CONFIG_MTK_CHIP_MT7615E_DBDC),y)
 	$(INSTALL_DATA) ./files/dbdc.l1profile.dat $(1)/etc/wireless/l1profile.dat
@@ -66,6 +66,7 @@ endif
 	$(INSTALL_DATA) ./files/mt7615e-sku-bf.dat $(1)/etc_ro/Wireless/RT2860AP/SingleSKU_BF.dat
 	$(INSTALL_BIN) ./files/mt7615.lua $(1)/lib/wifi/
 	$(INSTALL_BIN) ./files/82_load_wifi.sh $(1)/lib/preinit/
+	$(INSTALL_BIN) ./files/{mtkwifi,mtk-wifi.sh} $(1)/sbin/
 endef
 
 $(eval $(call BuildPackage,mt_wifi))
