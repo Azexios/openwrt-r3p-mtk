@@ -1,4 +1,4 @@
-Для сборки прошивки я использую Ubuntu 22.04 LTS (на других OS не проверял).
+Для сборки прошивки я использую **Ubuntu 22.04 LTS** (на других OS не проверял).
 
 Для MT7603+MT7615 - вместо "luci-app-mtwifi" выбрать "luci-app-mtwifi_7603_7615".
 
@@ -30,3 +30,16 @@
     ```bash
     make -j$(($(nproc) + 1)) V=s 2>&1 | grep -i -E "^make.*(error|[12345]...Entering dir)"
     ```
+---
+#### Если нужно обновить:
+```bash
+cd
+cd openwrt-r3p-mtk
+git pull
+rsync -av openwrt-r3p-mtk/target/ /home/alex/openwrt/target && rsync -av --delete openwrt-r3p-mtk/package/mt/ /home/alex/openwrt/package/mt
+```
+---
+### При сборке прошивки на OpenWrt 22.03
+Заменить "time_t" на "time64_t":  
+https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7603e/src/mt7603_wifi/common/bn_lib.c#L6400
+https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7615d/src/mt_wifi/embedded/security/bn_lib.c#L6429
