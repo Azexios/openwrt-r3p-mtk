@@ -214,14 +214,14 @@ function mtkwifi.load_profile(path, raw)
 				k = string.sub(line, 1, i-1)
 				v = string.sub(line, i+1)
 				if cfgs[mtkwifi.__trim(k)] then
-					mtkwifi.debug("warning", "skip repeated key"..line)
+					-- mtkwifi.debug("warning", "skip repeated key"..line)
 				end
 				cfgs[mtkwifi.__trim(k)] = mtkwifi.__trim(v) or ""
 			else
-				mtkwifi.debug("warning", "skip line without '=' "..line)
+				-- mtkwifi.debug("warning", "skip line without '=' "..line)
 			end
 		else
-			mtkwifi.debug("warning", "skip comment line "..line)
+			-- mtkwifi.debug("warning", "skip comment line "..line)
 		end
 	end
 	return cfgs
@@ -236,7 +236,7 @@ end
 function mtkwifi.save_profile(cfgs, path)
 
 	if not cfgs then
-		mtkwifi.debug("configuration was empty, nothing saved")
+		nixio.syslog("debug", "MTK-Wi-Fi - configuration was empty, nothing saved")
 		return
 	end
 
@@ -256,14 +256,14 @@ function mtkwifi.save_profile(cfgs, path)
 		local zone = l1 and l1.l1_path_to_zone(path)
 
 		if not l1dat then
-			mtkwifi.debug("save_profile: no l1dat", path)
+			-- mtkwifi.debug("save_profile: no l1dat", path)
 			nvram.nvram_save_profile(path)
 		else
 			if zone then
-				mtkwifi.debug("save_profile:", path, zone)
+				-- mtkwifi.debug("save_profile:", path, zone)
 				nvram.nvram_save_profile(path, zone)
 			else
-				mtkwifi.debug("save_profile:", path)
+				-- mtkwifi.debug("save_profile:", path)
 				nvram.nvram_save_profile(path)
 			end
 		end
@@ -412,7 +412,7 @@ function mtkwifi.token_set(str, n, v)
 	if not str then return end
 	local tmp = mtkwifi.__cfg2list(str)
 	if type(v) ~= type("") and type(v) ~= type(0) then
-		mtkwifi.debug("err", "invalid value type in token_set, "..type(v))
+		nixio.syslog("debug", "MTK-Wi-Fi - err", "invalid value type in token_set, "..type(v))
 		return
 	end
 	if #tmp < tonumber(n) then
@@ -504,8 +504,8 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
 
 	vifs["__prefix"] = prefix
 	if (cfgs.BssidNum == nil) then
-		mtkwifi.debug("BssidNum configuration value not found.")
-		mtkwifi.debug("debug","BssidNum configuration value not found.")
+		nixio.syslog("debug", "MTK-Wi-Fi - BssidNum configuration value not found.")
+		-- mtkwifi.debug("debug","BssidNum configuration value not found.")
 		return
 	end
 
@@ -515,7 +515,7 @@ function mtkwifi.__setup_vifs(cfgs, devname, mainidx, subidx)
 		dev_idx = string.match(devname, "(%w+)")
 		main_ifname = l1dat and l1dat[dridx][devname].main_ifname or dbdc_prefix[mainidx][subidx].."0"
 
-		mtkwifi.debug("setup_vifs", prefix, dev_idx, mainidx, subidx)
+		-- mtkwifi.debug("setup_vifs", prefix, dev_idx, mainidx, subidx)
 
 		vifs[j].vifname = j == 1 and main_ifname or prefix..(j-1)
 		if mtkwifi.exists("/sys/class/net/"..vifs[j].vifname) then
@@ -620,15 +620,15 @@ function mtkwifi.get_all_devs()
 
 		local fd = io.open(profile,"r")
 		if not fd then
-			mtkwifi.debug("debug", "cannot find "..profile)
+			nixio.syslog("debug", "MTK-Wi-Fi - cannot find "..profile)
 		else
 			fd:close()
-			mtkwifi.debug("debug", "load "..profile)
-			mtkwifi.debug("loading profile"..profile)
+			-- mtkwifi.debug("debug", "load "..profile)
+			-- mtkwifi.debug("loading profile"..profile)
 			local cfgs = mtkwifi.load_profile(profile)
 			if not cfgs then
-				mtkwifi.debug("error loading profile"..profile)
-				mtkwifi.debug("err", "error loading "..profile)
+				nixio.syslog("debug", "MTK-Wi-Fi - error loading profile"..profile)
+				-- mtkwifi.debug("err", "error loading "..profile)
 				return
 			end
 			devs[i] = {}

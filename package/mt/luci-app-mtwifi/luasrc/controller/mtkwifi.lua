@@ -312,28 +312,28 @@ function dev_cfg_reset(devname)
 		fd:close() -- just to test if file exists.
 		os.execute("cp -f /rom"..profiles[devname].." "..profiles[devname])
 	else
-		mtkwifi.debug("unable to find /rom"..profiles[devname])
+		nixio.syslog("debug", "MTK-Wi-Fi - unable to find /rom"..profiles[devname])
 	end
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg_view", devname))
 end
 
 function vif_del(dev, vif)
-	mtkwifi.debug("vif_del("..dev..vif..")")
+	nixio.syslog("debug", "MTK-Wi-Fi - vif_del("..dev..vif..")")
 	local devname,vifname = dev, vif
-	mtkwifi.debug("devname="..devname)
-	mtkwifi.debug("vifname="..vifname)
+	-- mtkwifi.debug("devname="..devname)
+	-- mtkwifi.debug("vifname="..vifname)
 	local devs = mtkwifi.get_all_devs()
 	local idx = devs[devname]["vifs"][vifname].vifidx -- or tonumber(string.match(vifname, "%d+")) + 1
-	mtkwifi.debug("idx="..idx, devname, vifname)
+	-- mtkwifi.debug("idx="..idx, devname, vifname)
 	local profile = devs[devname].profile
 	assert(profile)
 	if idx and tonumber(idx) >= 0 then
 		local cfgs = mtkwifi.load_profile(profile)
 		if cfgs then
-			mtkwifi.debug("ssid"..idx.."="..cfgs["SSID"..idx].."<br>")
+			-- mtkwifi.debug("ssid"..idx.."="..cfgs["SSID"..idx].."<br>")
 			cfgs["SSID"..idx] = ""
-			mtkwifi.debug("ssid"..idx.."="..cfgs["SSID"..idx].."<br>")
-			mtkwifi.debug("wpapsk"..idx.."="..cfgs["WPAPSK"..idx].."<br>")
+			-- mtkwifi.debug("ssid"..idx.."="..cfgs["SSID"..idx].."<br>")
+			-- mtkwifi.debug("wpapsk"..idx.."="..cfgs["WPAPSK"..idx].."<br>")
 			cfgs["WPAPSK"..idx] = ""
 			local ssidlist = {}
 			local j = 1
@@ -344,9 +344,9 @@ function vif_del(dev, vif)
 				end
 			end
 			for i,v in ipairs(ssidlist) do
-				mtkwifi.debug("ssidlist"..i.."="..v)
+				-- mtkwifi.debug("ssidlist"..i.."="..v)
 			end
-			mtkwifi.debug("cfgs.BssidNum="..cfgs.BssidNum.." #ssidlist="..#ssidlist)
+			-- mtkwifi.debug("cfgs.BssidNum="..cfgs.BssidNum.." #ssidlist="..#ssidlist)
 			assert(tonumber(cfgs.BssidNum) == #ssidlist + 1, "Please delete vif from larger idx.")
 			cfgs.BssidNum = #ssidlist
 			for i = 1,16 do
@@ -359,7 +359,7 @@ function vif_del(dev, vif)
 
 			mtkwifi.save_profile(cfgs, profile)
 		else
-			mtkwifi.debug(profile.." cannot be found!")
+			nixio.syslog("debug", "MTK-Wi-Fi - "..profile.." cannot be found!")
 		end
 	end
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
@@ -403,26 +403,26 @@ local function conf_wep_keys(cfgs,vifidx)
 end
 
 local function __security_cfg(cfgs, vif_idx)
-	mtkwifi.debug("__security_cfg, before, HideSSID="..tostring(cfgs.HideSSID))
-	mtkwifi.debug("__security_cfg, before, NoForwarding="..tostring(cfgs.NoForwarding))
-	mtkwifi.debug("__security_cfg, before, WmmCapable="..tostring(cfgs.WmmCapable))
-	mtkwifi.debug("__security_cfg, before, TxRate="..tostring(cfgs.TxRate))
-	mtkwifi.debug("__security_cfg, before, RekeyInterval="..tostring(cfgs.RekeyInterval))
-	mtkwifi.debug("__security_cfg, before, AuthMode="..tostring(cfgs.AuthMode))
-	mtkwifi.debug("__security_cfg, before, EncrypType="..tostring(cfgs.EncrypType))
-	mtkwifi.debug("__security_cfg, before, WscModeOption="..tostring(cfgs.WscModeOption))
-	mtkwifi.debug("__security_cfg, before, RekeyMethod="..tostring(cfgs.RekeyMethod))
-	mtkwifi.debug("__security_cfg, before, IEEE8021X="..tostring(cfgs.IEEE8021X))
-	mtkwifi.debug("__security_cfg, before, DefaultKeyID="..tostring(cfgs.DefaultKeyID))
-	mtkwifi.debug("__security_cfg, before, PMFMFPC="..tostring(cfgs.PMFMFPC))
-	mtkwifi.debug("__security_cfg, before, PMFMFPR="..tostring(cfgs.PMFMFPR))
-	mtkwifi.debug("__security_cfg, before, PMFSHA256="..tostring(cfgs.PMFSHA256))
-	mtkwifi.debug("__security_cfg, before, RADIUS_Server="..tostring(cfgs.RADIUS_Server))
-	mtkwifi.debug("__security_cfg, before, RADIUS_Port="..tostring(cfgs.RADIUS_Port))
-	mtkwifi.debug("__security_cfg, before, session_timeout_interval="..tostring(cfgs.session_timeout_interval))
-	mtkwifi.debug("__security_cfg, before, PMKCachePeriod="..tostring(cfgs.PMKCachePeriod))
-	mtkwifi.debug("__security_cfg, before, PreAuth="..tostring(cfgs.PreAuth))
-	mtkwifi.debug("__security_cfg, before, Wapiifname="..tostring(cfgs.Wapiifname))
+	-- mtkwifi.debug("__security_cfg, before, HideSSID="..tostring(cfgs.HideSSID))
+	-- mtkwifi.debug("__security_cfg, before, NoForwarding="..tostring(cfgs.NoForwarding))
+	-- mtkwifi.debug("__security_cfg, before, WmmCapable="..tostring(cfgs.WmmCapable))
+	-- mtkwifi.debug("__security_cfg, before, TxRate="..tostring(cfgs.TxRate))
+	-- mtkwifi.debug("__security_cfg, before, RekeyInterval="..tostring(cfgs.RekeyInterval))
+	-- mtkwifi.debug("__security_cfg, before, AuthMode="..tostring(cfgs.AuthMode))
+	-- mtkwifi.debug("__security_cfg, before, EncrypType="..tostring(cfgs.EncrypType))
+	-- mtkwifi.debug("__security_cfg, before, WscModeOption="..tostring(cfgs.WscModeOption))
+	-- mtkwifi.debug("__security_cfg, before, RekeyMethod="..tostring(cfgs.RekeyMethod))
+	-- mtkwifi.debug("__security_cfg, before, IEEE8021X="..tostring(cfgs.IEEE8021X))
+	-- mtkwifi.debug("__security_cfg, before, DefaultKeyID="..tostring(cfgs.DefaultKeyID))
+	-- mtkwifi.debug("__security_cfg, before, PMFMFPC="..tostring(cfgs.PMFMFPC))
+	-- mtkwifi.debug("__security_cfg, before, PMFMFPR="..tostring(cfgs.PMFMFPR))
+	-- mtkwifi.debug("__security_cfg, before, PMFSHA256="..tostring(cfgs.PMFSHA256))
+	-- mtkwifi.debug("__security_cfg, before, RADIUS_Server="..tostring(cfgs.RADIUS_Server))
+	-- mtkwifi.debug("__security_cfg, before, RADIUS_Port="..tostring(cfgs.RADIUS_Port))
+	-- mtkwifi.debug("__security_cfg, before, session_timeout_interval="..tostring(cfgs.session_timeout_interval))
+	-- mtkwifi.debug("__security_cfg, before, PMKCachePeriod="..tostring(cfgs.PMKCachePeriod))
+	-- mtkwifi.debug("__security_cfg, before, PreAuth="..tostring(cfgs.PreAuth))
+	-- mtkwifi.debug("__security_cfg, before, Wapiifname="..tostring(cfgs.Wapiifname))
 
 	cfgs.HideSSID = mtkwifi.token_set(cfgs.HideSSID, vif_idx, http.formvalue("__hidessid") or "0")
 	cfgs.NoForwarding = mtkwifi.token_set(cfgs.NoForwarding, vif_idx, http.formvalue("__noforwarding") or "0")
@@ -599,26 +599,26 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.RekeyInterval = mtkwifi.token_set(cfgs.RekeyInterval, vif_idx, http.formvalue("__rekeyinterval") or "0");
 	end
 
-	mtkwifi.debug("__security_cfg, after, HideSSID="..tostring(cfgs.HideSSID))
-	mtkwifi.debug("__security_cfg, after, NoForwarding="..tostring(cfgs.NoForwarding))
-	mtkwifi.debug("__security_cfg, after, WmmCapable="..tostring(cfgs.WmmCapable))
-	mtkwifi.debug("__security_cfg, after, TxRate="..tostring(cfgs.TxRate))
-	mtkwifi.debug("__security_cfg, after, RekeyInterval="..tostring(cfgs.RekeyInterval))
-	mtkwifi.debug("__security_cfg, after, AuthMode="..tostring(cfgs.AuthMode))
-	mtkwifi.debug("__security_cfg, after, EncrypType="..tostring(cfgs.EncrypType))
-	mtkwifi.debug("__security_cfg, after, WscModeOption="..tostring(cfgs.WscModeOption))
-	mtkwifi.debug("__security_cfg, after, RekeyMethod="..tostring(cfgs.RekeyMethod))
-	mtkwifi.debug("__security_cfg, after, IEEE8021X="..tostring(cfgs.IEEE8021X))
-	mtkwifi.debug("__security_cfg, after, DefaultKeyID="..tostring(cfgs.DefaultKeyID))
-	mtkwifi.debug("__security_cfg, after, PMFMFPC="..tostring(cfgs.PMFMFPC))
-	mtkwifi.debug("__security_cfg, after, PMFMFPR="..tostring(cfgs.PMFMFPR))
-	mtkwifi.debug("__security_cfg, after, PMFSHA256="..tostring(cfgs.PMFSHA256))
-	mtkwifi.debug("__security_cfg, after, RADIUS_Server="..tostring(cfgs.RADIUS_Server))
-	mtkwifi.debug("__security_cfg, after, RADIUS_Port="..tostring(cfgs.RADIUS_Port))
-	mtkwifi.debug("__security_cfg, after, session_timeout_interval="..tostring(cfgs.session_timeout_interval))
-	mtkwifi.debug("__security_cfg, after, PMKCachePeriod="..tostring(cfgs.PMKCachePeriod))
-	mtkwifi.debug("__security_cfg, after, PreAuth="..tostring(cfgs.PreAuth))
-	mtkwifi.debug("__security_cfg, after, Wapiifname="..tostring(cfgs.Wapiifname))
+	-- mtkwifi.debug("__security_cfg, after, HideSSID="..tostring(cfgs.HideSSID))
+	-- mtkwifi.debug("__security_cfg, after, NoForwarding="..tostring(cfgs.NoForwarding))
+	-- mtkwifi.debug("__security_cfg, after, WmmCapable="..tostring(cfgs.WmmCapable))
+	-- mtkwifi.debug("__security_cfg, after, TxRate="..tostring(cfgs.TxRate))
+	-- mtkwifi.debug("__security_cfg, after, RekeyInterval="..tostring(cfgs.RekeyInterval))
+	-- mtkwifi.debug("__security_cfg, after, AuthMode="..tostring(cfgs.AuthMode))
+	-- mtkwifi.debug("__security_cfg, after, EncrypType="..tostring(cfgs.EncrypType))
+	-- mtkwifi.debug("__security_cfg, after, WscModeOption="..tostring(cfgs.WscModeOption))
+	-- mtkwifi.debug("__security_cfg, after, RekeyMethod="..tostring(cfgs.RekeyMethod))
+	-- mtkwifi.debug("__security_cfg, after, IEEE8021X="..tostring(cfgs.IEEE8021X))
+	-- mtkwifi.debug("__security_cfg, after, DefaultKeyID="..tostring(cfgs.DefaultKeyID))
+	-- mtkwifi.debug("__security_cfg, after, PMFMFPC="..tostring(cfgs.PMFMFPC))
+	-- mtkwifi.debug("__security_cfg, after, PMFMFPR="..tostring(cfgs.PMFMFPR))
+	-- mtkwifi.debug("__security_cfg, after, PMFSHA256="..tostring(cfgs.PMFSHA256))
+	-- mtkwifi.debug("__security_cfg, after, RADIUS_Server="..tostring(cfgs.RADIUS_Server))
+	-- mtkwifi.debug("__security_cfg, after, RADIUS_Port="..tostring(cfgs.RADIUS_Port))
+	-- mtkwifi.debug("__security_cfg, after, session_timeout_interval="..tostring(cfgs.session_timeout_interval))
+	-- mtkwifi.debug("__security_cfg, after, PMKCachePeriod="..tostring(cfgs.PMKCachePeriod))
+	-- mtkwifi.debug("__security_cfg, after, PreAuth="..tostring(cfgs.PreAuth))
+	-- mtkwifi.debug("__security_cfg, after, Wapiifname="..tostring(cfgs.Wapiifname))
 end
 
 function initialize_multiBssParameters(cfgs,vif_idx)
@@ -639,8 +639,8 @@ end
 function vif_cfg(dev, vif)
 	local devname, vifname = dev, vif
 	if not devname then devname = vif end
-	mtkwifi.debug("devname="..devname)
-	mtkwifi.debug("vifname="..(vifname or ""))
+	-- mtkwifi.debug("devname="..devname)
+	-- mtkwifi.debug("vifname="..(vifname or ""))
 	local devs = mtkwifi.get_all_devs()
 	local profile = devs[devname].profile
 	assert(profile)
@@ -661,7 +661,7 @@ function vif_cfg(dev, vif)
 	local to_url
 	if http.formvalue("__action") == "vif_cfg_view" then
 		vif_idx = devs[devname]["vifs"][vifname].vifidx
-		mtkwifi.debug("vif_idx=", vif_idx, devname, vifname)
+		-- mtkwifi.debug("vif_idx=", vif_idx, devname, vifname)
 		to_url = luci.dispatcher.build_url("admin", "network", "wifi", "vif_cfg_view", devname, vifname)
 	elseif http.formvalue("__action") == "vif_add_view" then
 		cfgs.BssidNum = tonumber(cfgs.BssidNum) + 1
@@ -677,7 +677,7 @@ function vif_cfg(dev, vif)
 		if type(v) ~= type("") and type(v) ~= type(0) then
 			nixio.syslog("err", "vif_cfg, invalid value type for "..k..","..type(v))
 		elseif string.byte(k) ~= string.byte("_") then
-				mtkwifi.debug("copying values for "..k)
+				-- mtkwifi.debug("copying values for "..k)
 			cfgs[k] = v or ""
 		end
 	end
@@ -688,7 +688,7 @@ function vif_cfg(dev, vif)
 
 		__security_cfg(cfgs, vif_idx)
 
-	mtkwifi.debug(devname, profile)
+	-- mtkwifi.debug(devname, profile)
 	mtkwifi.save_profile(cfgs, profile)
 	if http.formvalue("__apply") then
 		__mtkwifi_reload(devname)
@@ -729,9 +729,9 @@ end
 
 function apcli_cfg(dev, vif)
 	local devname = dev
-	mtkwifi.debug(devname)
+	-- mtkwifi.debug(devname)
 	local profiles = mtkwifi.search_dev_and_profile()
-	mtkwifi.debug(profiles[devname])
+	-- mtkwifi.debug(profiles[devname])
 	assert(profiles[devname])
 
 	local cfgs = mtkwifi.load_profile(profiles[devname])
@@ -799,11 +799,11 @@ function apcli_connect(dev, vif)
 	--  2. mt7615e.1.apclix0	 # multi-card
 	--  3. mt7615e.1.2G.apclix0  # multi-card & multi-profile
 	local devname,vifname = dev, vif
-	mtkwifi.debug("devname=", dev, "vifname=", vif)
-	mtkwifi.debug(devname)
-	mtkwifi.debug(vifname)
+	-- mtkwifi.debug("devname=", dev, "vifname=", vif)
+	-- mtkwifi.debug(devname)
+	-- mtkwifi.debug(vifname)
 	local profiles = mtkwifi.search_dev_and_profile()
-	mtkwifi.debug(profiles[devname])
+	-- mtkwifi.debug(profiles[devname])
 	assert(profiles[devname])
 
 	local cfgs = mtkwifi.load_profile(profiles[devname])
@@ -837,11 +837,11 @@ function apcli_disconnect(dev, vif)
 	--  2. mt7615e.1.apclix0	 # multi-card
 	--  3. mt7615e.1.2G.apclix0  # multi-card & multi-profile
 	local devname,vifname = dev, vif
-	mtkwifi.debug("devname=", dev, "vifname", vif)
-	mtkwifi.debug(devname)
-	mtkwifi.debug(vifname)
+	-- mtkwifi.debug("devname=", dev, "vifname", vif)
+	-- mtkwifi.debug(devname)
+	-- mtkwifi.debug(vifname)
 	local profiles = mtkwifi.search_dev_and_profile()
-	mtkwifi.debug(profiles[devname])
+	-- mtkwifi.debug(profiles[devname])
 	assert(profiles[devname])
 	local cfgs = mtkwifi.load_profile(profiles[devname])
 	cfgs.ApCliEnable = "0"
