@@ -1,7 +1,5 @@
 Для сборки прошивки я использую **Ubuntu 22.04 LTS** (на других OS не проверял).
 
-Для MT7603+MT7615 - вместо "luci-app-mtwifi" выбрать "luci-app-mtwifi_7603_7615".
-
 1. Клонировать исходный код и перенести в каталог openwrt (вместо /home/alex/openwrt указать свой путь до openwrt):
 
     ```bash
@@ -10,20 +8,20 @@
     rsync -av openwrt-r3p-mtk/target/ /home/alex/openwrt/target && rsync -av --delete openwrt-r3p-mtk/package/mt/ /home/alex/openwrt/package/mt
     ```
 
-2. Перейти в каталог openwrt, удалить свой .config - запустить make menuconfig, выбрать своё устройство, перейти в раздел - LuCI > Applications - выбрать luci-app-mtwifi далее в Kernel modules > Wireless Drivers > выбрать драйвер mtk и зайти в настройки драйвера (выбрать нужные параметры или использовать дефолтные настройки), запомнить настройки/сделать скриншоты и аналогично с Network > Wireless > mt_wifi - MT_WIFI Configuration.
+2. Перейти в каталог openwrt, удалить свой .config - запустить make menuconfig, выбрать своё устройство, перейти в раздел - LuCI > Applications - включить <\*> luci-app-mtwifi, далее в Kernel modules > Wireless Drivers > включить <\*> нужный драйвер/драйвера mtk и зайти в их настройки (выбрать нужные параметры или использовать дефолтные), запомнить настройки/сделать скриншоты и аналогично с Network > Wireless > mt_wifi - MT_WIFI Configuration.
 
-3. Скачать конфиг (стандартно для сборки OpenWrt с правильным .vermagiс, для mt7621) на примере 21.02.3:
+3. Скачать конфиг (для сборки OpenWrt с правильным .vermagiс), ниже пример для OpenWrt 21.02.3 и устройств с CPU mt7621:
 
     ```bash
     wget -O .config https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/config.buildinfo
     make defconfig
     ```
 
-4. Запустить make menuconfig, выбрать своё устройство, в Kernel modules > Wireless Drivers - для Wi-Fi драйвера от OpenWrt должно быть выставлено M, выбрать драйвер от mtk и зайти в настройки драйвера - выставить настройки полученные на 2 пункте.  
-В LuCI > Applications - выбрать luci-app-mtwifi.  
+4. Запустить make menuconfig, выбрать своё устройство, в Kernel modules > Wireless Drivers - включить <\*> нужный драйвер/драйвера mtk и зайти в их настройки - выставить настройки полученные на 2 пункте.  
+В LuCI > Applications - включить <\*> luci-app-mtwifi.  
 В Network > Wireless - выставить настройки в mt_wifi из 2 пункта.  
-В Network > WirelessAPD - отключить wpad-basic-wolfssl и для hostapd-common выставить M.  
-Открыть profiles.json (для mt7621 - https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/profiles.json), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно выбрать/включить.
+В Network > WirelessAPD - отключить wpad-basic-wolfssl и выбрать как модуль \<M> hostapd-common.  
+Не обязательно - открыть profiles.json (для mt7621 и OpenWrt 21.02.3 - https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/profiles.json), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно включить в прошивку.
 
 5. Выйти, сохранив настройки и собрать прошивку:
 
@@ -32,7 +30,7 @@
     ```
 ---
 #### Если нужно обновить:
-Заменить /home/alex/openwrt на свой путь до openwrt
+*Заменить /home/alex/openwrt на свой путь до openwrt*
 ```bash
 cd
 cd openwrt-r3p-mtk
@@ -40,7 +38,7 @@ git pull
 rsync -av openwrt-r3p-mtk/target/ /home/alex/openwrt/target && rsync -av --delete openwrt-r3p-mtk/package/mt/ /home/alex/openwrt/package/mt
 ```
 ---
-### При сборке прошивки на OpenWrt 22.03
+### При сборке OpenWrt 22.03
 Заменить "time_t" на "time64_t":  
 https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7603e/src/mt7603_wifi/common/bn_lib.c#L6400
 https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7615d/src/mt_wifi/embedded/security/bn_lib.c#L6429

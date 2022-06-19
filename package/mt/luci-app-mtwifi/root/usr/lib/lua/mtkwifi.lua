@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  --------------------------------------------------
  
- For MT7615 and driver version 5.1.0.0
+ For MT7615 and MT7603+MT7615
  https://github.com/Azexios/openwrt-r3p-mtk
 ]]
 

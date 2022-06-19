@@ -6,7 +6,7 @@
 --
 -- Hua Shao <nossiac@163.com>
 --------------------------------------------------
--- For MT7615 and driver version 5.1.0.0
+-- For MT7615 and MT7603+MT7615
 -- https://github.com/Azexios/openwrt-r3p-mtk
 
 module("luci.controller.mtkwifi", package.seeall)
@@ -585,14 +585,26 @@ local function __security_cfg(cfgs, vif_idx)
 		cfgs.PMFMFPR = mtkwifi.token_set(cfgs.PMFMFPR, vif_idx, "0")
 	end
 
-	if http.formvalue("__wmmcapable") == "1" then
-		cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "1")
-		cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "1")
-	else
-		cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "0")
-		cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "0")
+	if cfgs.UAPSDCapable then
+		if http.formvalue("__wmmcapable") == "1" then
+			cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "1")
+			cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "1")
+		else
+			cfgs.UAPSDCapable = mtkwifi.token_set(cfgs.UAPSDCapable, vif_idx, "0")
+			cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "0")
+		end
 	end
-	
+
+	if cfgs.APSDCapable then
+		if http.formvalue("__wmmcapable") == "1" then
+			cfgs.APSDCapable = mtkwifi.token_set(cfgs.APSDCapable, vif_idx, "1")
+			cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "1")
+		else
+			cfgs.APSDCapable = mtkwifi.token_set(cfgs.APSDCapable, vif_idx, "0")
+			cfgs.WmmCapable = mtkwifi.token_set(cfgs.WmmCapable, vif_idx, "0")
+		end
+	end
+
 	if http.formvalue("__rekeyinterval") == "" then
 		cfgs.RekeyInterval = mtkwifi.token_set(cfgs.RekeyInterval, vif_idx, "86400")
 	else

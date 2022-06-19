@@ -1,7 +1,5 @@
 #!/bin/sh
 
-#For luci-app-mtwifi
-
 mkdir -p /tmp/mtk/wifi
 
 for dat in $(ls -1 /etc/wireless/mt7615)
@@ -11,8 +9,8 @@ done
 
 sleep 60
 
-#For MT7621
-#Move 2.4GHz and 5GHz MTK-Wi-Fi to CPU1 and CPU2
+# For MT7621
+# Move 2.4GHz and 5GHz MTK-Wi-Fi to CPU1 and CPU2
 
 mask=2
 for irq in $(grep -E 'ra(.{0,1}0)' /proc/interrupts | cut -d: -f1 | sed 's, *,,')
