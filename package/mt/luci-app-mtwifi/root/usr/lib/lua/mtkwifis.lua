@@ -42,11 +42,11 @@ else -- MT7603+MT7615
 	RSSI = mtkwifis.read_pipe("dmesg | grep -oE '[^] I]([-0-9 ]{1,}\\/){3}[-0-9]{1,}' 2>/dev/null") or "?"
 	RSSI2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | grep -oE '[^] ]([-0-9 ]{1,}\\/)[-0-9 ]{1,}' 2>/dev/null") or "?"
 	BW = mtkwifis.read_pipe("dmesg | grep -oE '([0-9]{2,3}M)\\/[0-9]{2,3}M' 2>/dev/null" ) or "?"
-	BW2 = mtkwifis.read_pipe("dmesg | grep -A 5 '100%' | grep -oE '[0-9]{2,3}M' 2>/dev/null" ) or "?"
+	BW2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | grep -oE '[0-9]{2,3}M' 2>/dev/null" ) or "?"
 	MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
-	MCS2 = mtkwifis.read_pipe("dmesg | sed -n '/100%/{n;n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
+	MCS2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW2>MCS2
 	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
-	SGI2 = mtkwifis.read_pipe("dmesg | sed -n '/100%/{n;n;n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
+	SGI2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW2>SGI2
 	Rate = mtkwifis.read_pipe("dmesg | awk '/ 0%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
 	Rate2 = mtkwifis.read_pipe("dmesg | awk '/100%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
 
