@@ -7,9 +7,9 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
-	--------------------------------------------------
+	- - - - - - - - - - - - - - - - -
  
-	For MT7615 and MT7603+MT7615
+	For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
 	https://github.com/Azexios/openwrt-r3p-mtk
 -->
 
@@ -31,13 +31,15 @@ local cfgs = mtkwifi.load_profile(dev.profile)
 
 if not mtkwifi.exists("/etc/wireless/mt7603/") then
 	mt1 = ""
+elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
+	mt1 = "mt7612"
 else
 	mt1 = "mt7603"
 end
 %>
 
 <style type="text/css">
-<% if mt1 == "mt7603" then %>
+<% if mt1 ~= "" then %>
 #container {visibility: hidden;}
 <% end %>
 table {
@@ -78,7 +80,7 @@ table {
 		&nbsp;&nbsp;&nbsp; Please waiting......
 	</div>
 
-	<form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg", devname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="false">
+	<form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg", devname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
 		<fieldset class="cbi-section">
 			<legend><span class="ren"> Device Configurations - <%=devname%></span> 
 	<%
@@ -91,7 +93,6 @@ table {
 	%>
 			</legend>
 			<table id="dev-cfg-basic" class="cbi-section-table">
-				<tr><th></th><td></td><td></td></tr>
 				<% if cfgs.WirelessMode then %>
 				<tr>
 					<td>Mode</td>
@@ -109,7 +110,6 @@ table {
 							<% end %>
 						</select>
 					</td>
-					<td></td>
 				</tr>
 				<% end %>
 				<% if cfgs.Channel then %>
@@ -251,8 +251,10 @@ table {
 								<option value="20" <% if dev.__bw == "20" then %> selected="selected"<% end%>>20 MHz</option>
 								<option value="40" <% if dev.__bw == "40" then %> selected="selected"<% end%>>40 MHz</option>
 								<option value="80" <% if dev.__bw == "80" then %> selected="selected"<% end%>>80 MHz</option>
+								<% if mt1 ~= "mt7612" then %>
 								<option value="160" <% if dev.__bw == "160" then %> selected="selected"<% end%>>160 MHz</option>
 								<option value="161" <% if dev.__bw == "161" then %> selected="selected"<% end%>>80+80 MHz</option>
+								<% end %>
 							<% else %>
 								<% if cfgs.HT_BW then %>
 									<option value="20" <% if dev.__bw == "20" then %> selected="selected"<% end%>>20 MHz</option>
@@ -272,7 +274,7 @@ table {
 							<% if cfgs.ApCliEnable == "1" then %>
 								<select style="width:auto" name="ExtChannel" disabled="disabled">
 									<option selected="selected">APClient/Repeater Mode</option>
-								</select
+								</select>
 							<% else %>
 								<select style="width:auto; min-width:180px;" name="HT_EXTCHA" id="HT_EXTCHA"></select>
 							<% end %>
@@ -578,8 +580,8 @@ table {
 					<td>Beamforming Explicit</td>
 					<% if cfgs.WirelessMode == "14" or cfgs.WirelessMode == "8" or cfgs.WirelessMode == "2" then %>
 						<td>
-							<input type="radio" name="ETxBfEnCond" id="ETxBfEnCond" onchange="beam_onchange(1);" value="1" <% if cfgs.ETxBfEnCond == "1" then %> checked="checked"<% end %>/> Enable
-							<input type="radio" name="ETxBfEnCond" id="ETxBfEnCond" onchange="beam_onchange(0);" value="0" <% if cfgs.ETxBfEnCond == "0" then %> checked="checked"<% end %>/> Disable
+							<input type="radio" name="ETxBfEnCond" class="ETxBfEnCond" onchange="beam_onchange(1);" value="1" <% if cfgs.ETxBfEnCond == "1" then %> checked="checked"<% end %>/> Enable
+							<input type="radio" name="ETxBfEnCond" class="ETxBfEnCond" onchange="beam_onchange(0);" value="0" <% if cfgs.ETxBfEnCond == "0" then %> checked="checked"<% end %>/> Disable
 						</td>
 					<% else %>
 						<td>
@@ -1019,7 +1021,7 @@ function initList(selobj, list, selvals, value, text){
 <% if mt1 == "" then %>
 window.onload = function() {
 	CountryRegion_onchange(document.getElementById("Region").options[document.getElementById("Region").selectedIndex].value);
-	if ($('#ETxBfEnCond').length > 0) {
+	if ($('.ETxBfEnCond').length > 0) {
 		beam_onchange(document.querySelector('input[name=ETxBfEnCond]:checked').value);
 	}
 }
@@ -1027,14 +1029,18 @@ window.onload = function() {
 function rgi() {
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		<% if mt1 == "mt7612" then %>
+		$(this).text($(this).text().replace('mt7615.2', 'mt7612'));
+		<% else %>
 		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
+		<% end %>
 	});
 }
 
 window.onload = function() {
 	rgi()
 	CountryRegion_onchange(document.getElementById("Region").options[document.getElementById("Region").selectedIndex].value);
-	if ($('#ETxBfEnCond').length > 0) {
+	if ($('.ETxBfEnCond').length > 0) {
 		beam_onchange(document.querySelector('input[name=ETxBfEnCond]:checked').value);
 	}
 	setTimeout(

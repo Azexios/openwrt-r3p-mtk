@@ -1,5 +1,8 @@
 # MTK Wi-Fi driver for OpenWrt
-- #### For Xiaomi Mi R3P and devices with MT7615+MT7615 or MT7603+MT7615.
+#### For Xiaomi Mi R3P and devices using:
+- MT7615+MT7615  
+- MT7603+MT7615  
+- MT7603+MT7612  
 ---
 ### [Инструкция по сборке (in Russian)](README_RU.md)
 

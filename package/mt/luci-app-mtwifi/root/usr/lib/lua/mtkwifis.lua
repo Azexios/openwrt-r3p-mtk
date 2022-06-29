@@ -1,8 +1,15 @@
 #!/usr/bin/env lua
 
--- Associated Stations MTK Wi-Fi
--- For the driver version 5.1.0.0 - MT7615 and 4.1.2.0 - MT7603
--- https://github.com/Azexios/openwrt-r3p-mtk
+--[[
+  Associated Stations MTK Wi-Fi
+
+  Supported driver versions:
+  5.1.0.0 - MT7615
+  4.1.2.0 - MT7603
+  3.0.5.0 - MT7612
+
+  https://github.com/Azexios/openwrt-r3p-mtk
+]]
 
 local mtkwifis = {}
 
@@ -28,6 +35,21 @@ if not mtkwifis.exists("/etc/wireless/mt7603/") then -- MT7615
 	MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
 	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
 	Rate = mtkwifis.read_pipe("dmesg | awk '/0%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
+
+	for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
+	do
+		os.execute("cat /tmp/dhcp.leases | grep -i '"..mac.."' | awk '{ print $4\" - \"$3 }' | grep '.*' >> /tmp/mtk/host || echo - >> /tmp/mtk/host")
+	end
+
+	Host = mtkwifis.read_pipe("cat /tmp/mtk/host 2>/dev/null") or "?"
+	os.execute("rm -rf /tmp/mtk/host")
+elseif mtkwifis.exists("/etc/wireless/mt7603/") and mtkwifis.exists("/etc/wireless/mt7612/") then -- MT7603+MT7612
+	MAC = mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..' 2>/dev/null") or "?"
+	RSSI = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed '1!G;h;$!d' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | sed 's/    /\\//g' | awk '{print $NF}' | cut -d '/' -f1-2 | sed '1!G;h;$!d' 2>/dev/null") or "?" -- BW>RSSI
+	BW = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | grep -oE '[0-9]{2,3}M' 2>/dev/null" ) or "?"
+	MCS = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
+	SGI = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
+	Rate = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;n;n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
 
 	for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
 	do

@@ -7,9 +7,9 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
-	--------------------------------------------------
+	- - - - - - - - - - - - - - - - -
  
-	For MT7615 and MT7603+MT7615
+	For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
 	https://github.com/Azexios/openwrt-r3p-mtk
 -->
 
@@ -41,18 +41,25 @@ local debug = 0
 
 if not mtkwifi.exists("/etc/wireless/mt7603/") then
 	mt1 = ""
+elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
+	mt1 = "mt7612"
 else
 	mt1 = "mt7603"
 end
 %>
 
 <style type="text/css">
-<% if mt1 == "mt7603" then %>
+<% if mt1 ~= "" then %>
 #container {visibility: hidden;}
 <% end %>
 table {
   border-collapse:separate;
   border-spacing:9px 5px
+}
+.he1 {
+ color:red;
+ margin-left:8px;
+ white-space:pre;
 }
 @media screen and (max-device-width: 600px) {
  header .pull-right {
@@ -104,25 +111,30 @@ table {
 			<legend> <a name="apcli_cfg_section"> Connection Configurations</a> </legend>
 			<table class="cbi-section-table">
 				<tbody>
-				<tr><th class="th1"></th><th></th><th></th></tr>
 				<tr>
 					<td>Root AP SSID</td>
 					<td>
 						<input type="text" name="ApCliSsid" id="ApCliSsid" value="<%=cfgs.ApCliSsid%>"/>
 					</td>
-					<td></td>
 				</tr>
 				<tr>
 					<td>Root AP Channel</td>
 					<td>
-						<input type="text" name="Channel" id="Channel" value="<%=cfgs.Channel%>"/>
+						<input type="text" name="Channel" id="Channel" value="<%=cfgs.Channel%>"/><span class="he1">This will overwrite ap channel.</span>
 					</td>
-					<td> <span style="color:red;">This will overwrite ap channel.</span></td>
+					
 				</tr>
 				<tr>
 					<td>Root AP Authentication Mode</td>
 					<td>
-						<select name="ApCliAuthMode" cfg="ApCliAuthMode" id="ApCliAuthMode" onchange="ApCliAuthMode_onchange(this.options[this.options.selectedIndex].value)">
+						<select name="ApCliAuthMode" id="ApCliAuthMode" onchange="ApCliAuthMode_onchange(this.options[this.options.selectedIndex].value)">
+						<% 
+						if mt1 == "mt7612" then
+							if devname == "mt7615.2" then
+								dev.ApCliAuthModeList = dev.ApCliAuthModeList12
+							end
+						end
+						%>
 							<% for _,v in ipairs(dev.ApCliAuthModeList) do %>
 								<% if (cfgs.ApCliAuthMode == "OPEN" and cfgs.ApCliEncrypType== "NONE") then
 									if(v == "Disable") then %>
@@ -135,7 +147,7 @@ table {
 								else %>
 							<option value="<%=v%>" <% if cfgs.ApCliAuthMode==v then %>selected="selected" <% end %>><%=v%>
 							</option>
-							<% end %>
+								<% end %>
 							<% end %>
 						</select>
 					</td>
@@ -361,7 +373,11 @@ window.onload = ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").
 function rgi() {
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		<% if mt1 == "mt7612" then %>
+		$(this).text($(this).text().replace('mt7615.2', 'mt7612'));
+		<% else %>
 		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
+		<% end %>
 	});
 }
 

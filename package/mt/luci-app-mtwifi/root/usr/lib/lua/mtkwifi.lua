@@ -13,9 +13,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- --------------------------------------------------
+ - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
- For MT7615 and MT7603+MT7615
+ For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
  https://github.com/Azexios/openwrt-r3p-mtk
 ]]
 
@@ -344,10 +344,22 @@ local AuthModeList = {
 	"WEPAUTO",
 	"WPA2",
 	"WPA2PSK",
-	"WPA3PSK",
 	"WPAPSKWPA2PSK",
+	"WPA3PSK",
 	"WPA2PSKWPA3PSK",
 	"OWE",
+	"WPA1WPA2",
+	"IEEE8021X",
+}
+
+local AuthModeList12 = {
+	"Disable",
+	"OPEN",--OPENWEP
+	"SHARED",--SHAREDWEP
+	"WEPAUTO",
+	"WPA2",
+	"WPA2PSK",
+	"WPAPSKWPA2PSK",
 	"WPA1WPA2",
 	"IEEE8021X",
 }
@@ -367,6 +379,18 @@ local ApCliAuthModeList = {
 	"WPA2PSK",
 	"WPA3PSK",
 	"OWE",
+	-- "WPA",
+	-- "WPA2",
+	-- "WPAWPA2",
+	-- "8021X",
+}
+
+local ApCliAuthModeList12 = {
+	"Disable",
+	"OPEN",
+	"SHARED",
+	"WPAPSK",
+	"WPA2PSK",
 	-- "WPA",
 	-- "WPA2",
 	-- "WPAWPA2",
@@ -661,6 +685,7 @@ function mtkwifi.get_all_devs()
 			end
 			devs[i].WscConfMode = cfgs.WscConfMode
 			devs[i].AuthModeList = AuthModeList
+			devs[i].AuthModeList12 = AuthModeList12
 			devs[i].WpsEnableAuthModeList = WpsEnableAuthModeList
 
 			if wpa_support == 1 then
@@ -673,6 +698,7 @@ function mtkwifi.get_all_devs()
 				table.insert(devs[i].AuthModeList,"WAICERT")
 			end
 			devs[i].ApCliAuthModeList = ApCliAuthModeList
+			devs[i].ApCliAuthModeList12 = ApCliAuthModeList12
 			devs[i].WPA_Enc_List = WPA_Enc_List
 			devs[i].WEP_Enc_List = WEP_Enc_List
 			devs[i].Channel = tonumber(cfgs.Channel)

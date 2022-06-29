@@ -7,9 +7,9 @@
 	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
 	Hua Shao <nossiac@163.com>
-	--------------------------------------------------
+	- - - - - - - - - - - - - - - - -
  
-	For MT7615 and MT7603+MT7615
+	For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
 	https://github.com/Azexios/openwrt-r3p-mtk
 -->
 
@@ -20,6 +20,8 @@ local devs = mtkwifi.get_all_devs()
 
 if not mtkwifi.exists("/etc/wireless/mt7603/") then
 	mt1 = ""
+elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
+	mt1 = "mt7612"
 else
 	mt1 = "mt7603"
 end
@@ -72,8 +74,7 @@ table {
 </style>
 
 <div id="container">
-	<table>
-	<h2><a name="content">Wireless Overview</a></h2>
+	<h2><a>Wireless Overview</a></h2>
 	
 	<div id="loading" style="margin-top: 1em; display: none;">
 	<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" />
@@ -93,7 +94,7 @@ table {
 			<tbody>
 				<tr>
 					<td style="width:34px">
-						<img src="/luci-static/resources/icons/wifi_big.png" style="float:left; margin-right:10px" />
+						<img src="/luci-static/resources/icons/wifi_big.png" alt="" style="float:left; margin-right:10px" />
 					</td>
 					<td colspan="2" style="text-align:left">
 						<big><strong class="ren" title="<%=dev.profile%>"> Generic Mediatek <%=dev.devname%></strong></big>
@@ -121,9 +122,9 @@ table {
 					<td></td>
 					<td class="cbi-value-field" style="width:16px; padding:3px">
 						<% if vif.state == "up" then %>
-						<img src="/luci-static/resources/icons/signal-75-100.png" />
+						<img src="/luci-static/resources/icons/signal-75-100.png" alt="" />
 						<% else %>
-						<img src="/luci-static/resources/icons/signal-none.png" />
+						<img src="/luci-static/resources/icons/signal-none.png" alt="" />
 						<% end %>
 					</td>
 					<td class="cbi-value-field" style="min-width:150px;vertical-align:middle; text-align:left; padding:3px"><strong>Interface:</strong> <%=vif.vifname%> | <strong>Type:</strong> AP | <strong>SSID:</strong> <%=vif.__ssid%> | <strong>Channel:</strong> <%=vif.__channel%>
@@ -155,12 +156,12 @@ table {
 					<td class="cbi-value-field" style="width:16px; padding:3px">
 						<% if dev.apcli.state == "up" then %>
 							<% if dev.apcli.status == "Connected" then %>
-							<img src="/luci-static/resources/icons/signal-75-100.png" />
+							<img src="/luci-static/resources/icons/signal-75-100.png" alt="" />
 							<% else %>
-							<img src="/luci-static/resources/icons/signal-0.png" />
+							<img src="/luci-static/resources/icons/signal-0.png" alt="" />
 							<% end %>
 						<% else %>
-						<img src="/luci-static/resources/icons/signal-none.png" />
+						<img src="/luci-static/resources/icons/signal-none.png" alt="" />
 						<% end %>
 					</td>
 					<td class="cbi-value-field" style="min-width:150px;vertical-align:middle; text-align:left; padding:3px"><strong>Interface:</strong> <%=dev.apcli.devname%> | <strong>Type:</strong> STA | <strong>Status:</strong> <%=dev.apcli.status%>
@@ -195,20 +196,17 @@ table {
 		</table>
 	</fieldset>
 	<% end %>
-	</table>
 
 	<fieldset class="cbi-section">
-		<table align="left">
-			<h2>
-			<a id="content" name="content">Associated Stations</a>
-			<input class="cbi-button cbi-button-reload" style="height:26px" title="Refresh the page" value="Refresh" type="button" onclick="window.location.reload();">
-			</h2>
-		</table>
+		<h2>
+		<a>Associated Stations</a>
+		<input class="cbi-button cbi-button-reload" style="height:26px" title="Refresh the page" value="Refresh" type="button" onclick="window.location.reload();">
+		</h2>
 	</fieldset>
 
 	<% if mt1 == "" then %>
 	<fieldset class="cbi-section">
-	<table align="left">
+	<table>
 		<thead>
 			<tr style="text-align:left">
 				<th>MAC-Address</th>
@@ -224,7 +222,7 @@ table {
 			<tr>
 				<td><div class="m1"><%=MAC%></div></td>
 				<td><div class="a1"><%=Host%></div></td>
-				<td><div class="b1"><%=RSSI%></div></div></td>
+				<td><div class="b1"><%=RSSI%></div></td>
 				<td><div class="b1"><%=BW%></div></td>
 				<td><div class="b1"><%=MCS%></div></td>
 				<td><div class="b1" id="SGI"><%=SGI%></div></td>
@@ -233,15 +231,15 @@ table {
 		</tbody>
 	</table>
 	</fieldset>
-	<% else %>
-	<big><a id="content" name="content"><b>mt7603</b></a></big>
+	<% elseif mt1 == "mt7603" then %>
+	<big><a><b>mt7603</b></a></big>
 	<fieldset class="cbi-section">
-	<table align="left">
+	<table>
 		<thead>
 			<tr style="text-align:left">
 				<th>MAC-Address</th>
 				<th><div class="a1">Hostname - IPv4 (DHCP)</div></th>
-				<th><div class="b1">RSSI - 0/1</th>
+				<th><div class="b1">RSSI - 0/1</div></th>
 				<th><div class="b1">BW</div></th>
 				<th><div class="b1">MCS</div></th>
 				<th><div class="b1">GI</div></th>
@@ -262,9 +260,9 @@ table {
 	</table>
 	</fieldset>
 	<br>
-	<big><a id="content" name="content"><b>mt7615</b></a></big>
+	<big><a><b>mt7615</b></a></big>
 	<fieldset class="cbi-section">
-	<table align="left">
+	<table>
 		<thead>
 			<tr style="text-align:left">
 				<th>MAC-Address</th>
@@ -274,6 +272,33 @@ table {
 				<th><div class="b1">MCS (T/R)</div></th>
 				<th><div class="b1">GI (T/R)</div></th>
 				<th><div class="b1">Rate (T/R)</div></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><div class="m1"><%=MAC%></div></td>
+				<td><div class="a1"><%=Host%></div></td>
+				<td><div class="b1"><%=RSSI%></div></td>
+				<td><div class="b1"><%=BW%></div></td>
+				<td><div class="b1"><%=MCS%></div></td>
+				<td><div class="b1" id="SGI"><%=SGI%></div></td>
+				<td><div class="b1" id="Rate"><%=Rate%></div></td>
+			</tr>
+		</tbody>
+	</table>
+	</fieldset>
+	<% else %>
+	<fieldset class="cbi-section">
+	<table>
+		<thead>
+			<tr style="text-align:left">
+				<th>MAC-Address</th>
+				<th><div class="a1">Hostname - IPv4 (DHCP)</div></th>
+				<th><div class="b1">RSSI - 0/1</div></th>
+				<th><div class="b1">BW</div></th>
+				<th><div class="b1">MCS</div></th>
+				<th><div class="b1">GI</div></th>
+				<th><div class="b1">Rate</div></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -327,20 +352,30 @@ function resizeTables(sharedSize) {
 }
 
 function rgi() {
-  $(SGI).text($(SGI).text().replace(/1\/1/g,'Short/Short'));
-  $(SGI).text($(SGI).text().replace(/1\/0/g,'Short/Long'));
-  $(SGI).text($(SGI).text().replace(/0\/1/g,'Long/Short'));
-  $(SGI).text($(SGI).text().replace(/0\/0/g,'Long/Long'));
-  $(Rate).text($(Rate).text().replace(/\n/g,' Mbit/s\n'));
-  <% if mt1 == "mt7603" then %>
-  $(SGI2).text($(SGI2).text().replace(/1/g,'Short'));
-  $(SGI2).text($(SGI2).text().replace(/0/g,'Long'));
-  $(Rate2).text($(Rate2).text().replace(/\n/g,' Mbit/s\n'));
-  $(".ren").each(function() {
-	$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
-	$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
-  });
-  <% end %>
+<% if mt1 ~= "mt7612" then %>
+	$(SGI).text($(SGI).text().replace(/1\/1/g,'Short/Short'));
+	$(SGI).text($(SGI).text().replace(/1\/0/g,'Short/Long'));
+	$(SGI).text($(SGI).text().replace(/0\/1/g,'Long/Short'));
+	$(SGI).text($(SGI).text().replace(/0\/0/g,'Long/Long'));
+	$(Rate).text($(Rate).text().replace(/\n/g,' Mbit/s\n'));
+	<% if mt1 == "mt7603" then %>
+	$(SGI2).text($(SGI2).text().replace(/1/g,'Short'));
+	$(SGI2).text($(SGI2).text().replace(/0/g,'Long'));
+	$(Rate2).text($(Rate2).text().replace(/\n/g,' Mbit/s\n'));
+	$(".ren").each(function() {
+		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
+	});
+	<% end %>
+<% else %>
+	$(SGI).text($(SGI).text().replace(/1/g,'Short'));
+	$(SGI).text($(SGI).text().replace(/0/g,'Long'));
+	$(Rate).text($(Rate).text().replace(/\n/g,' Mbit/s\n'));
+	$(".ren").each(function() {
+		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		$(this).text($(this).text().replace('mt7615.2', 'mt7612'));
+	});
+<% end %>
 }
 
 window.onload = function() {

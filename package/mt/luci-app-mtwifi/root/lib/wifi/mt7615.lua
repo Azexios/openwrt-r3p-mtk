@@ -1,9 +1,11 @@
 #!/usr/bin/lua
+
 -- Alternative for OpenWrt's /sbin/wifi.
 -- Copyright Not Reserved.
 -- Hua Shao <nossiac@163.com>
---------------------------------------------------
--- For MT7615 and MT7603+MT7615
+-- - - - - - - - - - - - - - - - - -
+--
+-- For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
 -- https://github.com/Azexios/openwrt-r3p-mtk
 
 package.path = '/lib/wifi/?.lua;'..package.path

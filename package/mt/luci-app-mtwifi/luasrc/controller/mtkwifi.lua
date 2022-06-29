@@ -5,8 +5,9 @@
 -- And you will get your hands dirty.
 --
 -- Hua Shao <nossiac@163.com>
---------------------------------------------------
--- For MT7615 and MT7603+MT7615
+-- - - - - - - - - - - - - - - - - -
+--
+-- For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
 -- https://github.com/Azexios/openwrt-r3p-mtk
 
 module("luci.controller.mtkwifi", package.seeall)
@@ -230,15 +231,19 @@ function dev_cfg(devname)
 		cfgs.VHT_BW = 3
 	end
 
-	if cfgs.VOW_Airtime_Fairness_En == "1" then
-		cfgs.VOW_Sta_DWRR_Max_Wait_Time = "64"
-	else
-		cfgs.VOW_Sta_DWRR_Max_Wait_Time = "1"
+	if cfgs.VOW_Airtime_Fairness_En then
+		if cfgs.VOW_Airtime_Fairness_En == "1" then
+			cfgs.VOW_Sta_DWRR_Max_Wait_Time = "64"
+		else
+			cfgs.VOW_Sta_DWRR_Max_Wait_Time = "1"
+		end
 	end
 
-	if cfgs.ETxBfEnCond == "0" then
-		if cfgs.MUTxRxEnable then
-			cfgs.MUTxRxEnable = "0"
+	if cfgs.ETxBfEnCond then
+		if cfgs.ETxBfEnCond == "0" then
+			if cfgs.MUTxRxEnable then
+				cfgs.MUTxRxEnable = "0"
+			end
 		end
 	end
 

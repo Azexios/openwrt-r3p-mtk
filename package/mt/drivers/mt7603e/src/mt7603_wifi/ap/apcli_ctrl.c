@@ -817,7 +817,7 @@ static VOID ApCliCtrlProbeRspAction(
 					, CliIdx
 #endif
 					);
-				has_pmkid = TRUE;
+				has_pmkid = FALSE;
 			}
 			if (has_pmkid == TRUE) {
 				COPY_MAC_ADDR(AuthReq.Addr, pApCliEntry->MlmeAux.Bssid);

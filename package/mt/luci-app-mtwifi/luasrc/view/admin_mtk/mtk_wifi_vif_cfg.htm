@@ -1,16 +1,16 @@
 
 <%+header%>
 <!--
-  This module is a demo to configure MTK' proprietary WiFi driver.
-  Basic idea is to bypass uci and edit wireless profile (mt76xx.dat) directly.
-  LuCI's WiFi configuration is more logical and elegent, but it's quite tricky to
-  translate uci into MTK's WiFi profile (like we did in "uci2dat").
+	This module is a demo to configure MTK' proprietary WiFi driver.
+	Basic idea is to bypass uci and edit wireless profile (mt76xx.dat) directly.
+	LuCI's WiFi configuration is more logical and elegent, but it's quite tricky to
+	translate uci into MTK's WiFi profile (like we did in "uci2dat").
 
-  Hua Shao <nossiac@163.com>
-  --------------------------------------------------
+	Hua Shao <nossiac@163.com>
+	- - - - - - - - - - - - - - - - -
 
-  For MT7615 and MT7603+MT7615
-  https://github.com/Azexios/openwrt-r3p-mtk
+	For MT7615+MT7615, MT7603+MT7615 and MT7603+MT7612
+	https://github.com/Azexios/openwrt-r3p-mtk
 -->
 
 <%
@@ -43,13 +43,15 @@ local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
 
 if not mtkwifi.exists("/etc/wireless/mt7603/") then
 	mt1 = ""
+elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
+	mt1 = "mt7612"
 else
 	mt1 = "mt7603"
 end
 %>
 
 <style type="text/css">
-<% if mt1 == "mt7603" then %>
+<% if mt1 ~= "" then %>
 #container {visibility: hidden;}
 <% end %>
 table {
@@ -129,11 +131,19 @@ table {
 			<tr>
 				<td>Auth Mode</td>
 				<td>
-				<select name="__authmode" cfg="AuthMode" id="AuthMode" onchange="AuthMode_onchange(this.options[this.options.selectedIndex].value)">
+				<select name="__authmode" id="AuthMode" onchange="AuthMode_onchange(this.options[this.options.selectedIndex].value)">
 					<%
 					local AuthModes
 					if(WscValue == "0") then
-						AuthModes = dev.AuthModeList
+						if mt1 == "mt7612" then
+							if devname == "mt7615.2" then
+								AuthModes = dev.AuthModeList12
+							else
+								AuthModes = dev.AuthModeList
+							end
+						else
+							AuthModes = dev.AuthModeList
+						end
 					else
 						AuthModes = dev.WpsEnableAuthModeList
 					end
@@ -167,7 +177,7 @@ table {
 			<tr>
 				<td>WPA Algorithm</td>
 				<td>
-				<select name="__wpa_encrypttype" id="__wpa_encrypttype" cfg="EncrypType">
+				<select name="__wpa_encrypttype" id="__wpa_encrypttype">
 				<% for _,v in ipairs(dev.WPA_Enc_List) do %>
 					<option value="<%=v%>" <% if vif.__encrypttype==v then %>selected="selected" <% end %>><%=v%></option>
 				<% end %>
@@ -189,7 +199,7 @@ table {
 			<tr>
 				<td>Key Renewal Interval</td>
 				<td>
-				<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" id="__rekeyinterval" cfg="RekeyInterval" /><span class="he1">second(s) (0 ~ 4194303, default 86400)</span>
+				<input value="<%=vif.__rekeyinterval%>" type="text" name="__rekeyinterval" /><span class="he1">second(s) (0 ~ 4194303, default 86400)</span>
 				</td>
 			</tr>
 			</tbody>
@@ -205,7 +215,7 @@ table {
 			<tr>
 				<td>Encryption</td>
 				<td>
-				<select name="__wep_encrypttype" cfg="EncrypType">
+				<select name="__wep_encrypttype">
 				<% for _,v in ipairs(dev.WEP_Enc_List) do %>
 					<option value="<%=v%>" <% if vif.__encrypttype==v then %>selected="selected" <% end %>><%=v%>
 					</option>
@@ -289,7 +299,7 @@ table {
 			<tr>
 				<td>PMK Cache Period</td>
 				<td>
-				<input value="<%=vif.__pmkcacheperiod%>" type="text" name="__pmkcacheperiod" id="__pmkcacheperiod" cfg="PMKCachePeriod" /><span class="he1">minute(s)</span>
+				<input value="<%=vif.__pmkcacheperiod%>" type="text" name="__pmkcacheperiod" /><span class="he1">minute(s)</span>
 				</td>
 			</tr>
 			<tr>
@@ -365,13 +375,13 @@ table {
 			<tr>
 				<td>Radius Server IP</td>
 				<td>
-				<input value="<%=vif.__radius_server%>" type="text" name="__radius_server" id="__radius_server" cfg="RADIUS_Server" />
+				<input value="<%=vif.__radius_server%>" type="text" name="__radius_server" />
 				</td>
 			</tr>
 			<tr>
 				<td>Radius Server Port</td>
 				<td>
-				<input value="<%=vif.__radius_port%>" type="text" name="__radius_port" id="__radius_port" cfg="RADIUS_Port" />
+				<input value="<%=vif.__radius_port%>" type="text" name="__radius_port" />
 				</td>
 			</tr>
 			<tr>
@@ -397,7 +407,7 @@ table {
 			<tr>
 				<td>Hidden SSID</td>
 				<td>
-				<input name="__hidessid" cfg="HideSSID" value="1"
+				<input name="__hidessid" value="1"
 				<% if vif.__hidessid == "1" then %>
 				checked="checked"
 				<% end %> type="checkbox" />
@@ -406,7 +416,7 @@ table {
 			<tr>
 				<td>AP Isolation</td>
 				<td>
-				<input name="__noforwarding" cfg="NoForwarding" value="1"
+				<input name="__noforwarding" value="1"
 				<% if vif.__noforwarding == "1" then %>
 				checked="checked"
 				<% end %> type="checkbox" />
@@ -415,7 +425,7 @@ table {
 			<tr>
 				<td>WMM QoS</td>
 				<td>
-				<input name="__wmmcapable" cfg="WmmCapable" value="1"
+				<input name="__wmmcapable" value="1"
 				<% if vif.__wmmcapable ~= "0" then %>
 				checked="checked"
 				<% end %> type="checkbox" />
@@ -556,7 +566,11 @@ window.onload = AuthMode_onchange(document.getElementById("AuthMode").options[do
 function rgi() {
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		<% if mt1 == "mt7612" then %>
+		$(this).text($(this).text().replace('mt7615.2', 'mt7612'));
+		<% else %>
 		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
+		<% end %>
 	});
 }
 
