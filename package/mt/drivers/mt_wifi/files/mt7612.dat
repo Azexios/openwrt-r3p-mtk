@@ -127,6 +127,7 @@ HT_RDG=0
 HT_RxStream=2
 HT_STBC=1
 HT_TxStream=2
+IdleTimeout=600
 IEEE80211H=0
 IEEE8021X=0
 IgmpSnEnable=1

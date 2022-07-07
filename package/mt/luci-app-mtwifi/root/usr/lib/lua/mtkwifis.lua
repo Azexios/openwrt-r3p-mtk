@@ -33,8 +33,8 @@ if not mtkwifis.exists("/etc/wireless/mt7603/") then -- MT7615
 	RSSI = mtkwifis.read_pipe("dmesg | grep -oE '[^] I]([-0-9 ]{1,}\\/){3}[-0-9]{1,}' 2>/dev/null") or "?"
 	BW = mtkwifis.read_pipe("dmesg | grep -oE '([0-9]{2,3}M)\\/[0-9]{2,3}M' 2>/dev/null" ) or "?"
 	MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
-	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
-	Rate = mtkwifis.read_pipe("dmesg | awk '/0%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
+	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' | sed 's/0/Long/g;s/1/Short/g' 2>/dev/null" ) or "?" -- BW>SGI
+	Rate = mtkwifis.read_pipe("dmesg | awk '/0%/ {print a}{a=$NF \" Mbit/s\"}' 2>/dev/null" ) or "?"
 
 	for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
 	do
@@ -50,8 +50,8 @@ elseif mtkwifis.exists("/etc/wireless/mt7603/") and mtkwifis.exists("/etc/wirele
 	RSSI = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed '1!G;h;$!d' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | sed 's/    /\\//g' | awk '{print $NF}' | cut -d '/' -f1-2 | sed '1!G;h;$!d' 2>/dev/null") or "?" -- BW>RSSI
 	BW = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | grep -oE '[0-9]{2,3}M' 2>/dev/null" ) or "?"
 	MCS = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
-	SGI = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
-	Rate = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;n;n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?"
+	SGI = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' | sed 's/0/Long/g;s/1/Short/g' 2>/dev/null" ) or "?" -- BW>SGI
+	Rate = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;n;n;n;p;}' | awk '{print $NF \" Mbit/s\"}' 2>/dev/null" ) or "?"
 
 	for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
 	do
@@ -71,10 +71,10 @@ else -- MT7603+MT7615
 	BW2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | grep -oE '[0-9]{2,3}M' 2>/dev/null" ) or "?"
 	MCS = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>MCS
 	MCS2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW2>MCS2
-	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW>SGI
-	SGI2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' 2>/dev/null" ) or "?" -- BW2>SGI2
-	Rate = mtkwifis.read_pipe("dmesg | awk '/ 0%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
-	Rate2 = mtkwifis.read_pipe("dmesg | awk '/100%/ {print a}{a=$NF}' 2>/dev/null" ) or "?"
+	SGI = mtkwifis.read_pipe("dmesg | sed -nE '/([0-9]{2,3}M)\\/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' | sed 's/0/Long/g;s/1/Short/g' 2>/dev/null" ) or "?" -- BW>SGI
+	SGI2 = mtkwifis.read_pipe("dmesg | grep -B 14 '100%' | sed -nE '/[0-9]{2,3}M/{n;n;p;}' | awk '{print $NF}' | sed 's/0/Long/g;s/1/Short/g' 2>/dev/null" ) or "?" -- BW2>SGI2
+	Rate = mtkwifis.read_pipe("dmesg | awk '/ 0%/ {print a}{a=$NF \" Mbit/s\"}' 2>/dev/null" ) or "?"
+	Rate2 = mtkwifis.read_pipe("dmesg | awk '/100%/ {print a}{a=$NF \" Mbit/s\"}' 2>/dev/null" ) or "?"
 
 	for _,mac in ipairs(string.split(mtkwifis.read_pipe("dmesg | grep -B 23 ' 0%' | grep -oE '([A-Z0-9]{2}:){5}..'"), "\n"))
 	do

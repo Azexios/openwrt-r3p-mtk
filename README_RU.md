@@ -35,7 +35,7 @@
 cd
 cd openwrt-r3p-mtk
 git pull
-rsync -av openwrt-r3p-mtk/target/ /home/alex/openwrt/target && rsync -av --delete openwrt-r3p-mtk/package/mt/ /home/alex/openwrt/package/mt
+rsync -av target/ /home/alex/openwrt/target && rsync -av --delete package/mt/ /home/alex/openwrt/package/mt
 ```
 ---
 ### При сборке OpenWrt 22.03

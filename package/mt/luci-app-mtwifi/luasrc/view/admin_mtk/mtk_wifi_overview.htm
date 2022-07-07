@@ -30,11 +30,11 @@ end
 <style type="text/css">
 #container {visibility: hidden;}
 .a1 {
- margin-left:30px;
+ margin-left:25px;
  white-space:pre;
 }
 .b1 {
- margin-left:30px;
+ margin-left:25px;
  white-space:pre;
 }
 .m1 {
@@ -42,7 +42,7 @@ end
 }
 table {
  border-collapse:separate;
- border-spacing:3px 5px
+ border-spacing:0px 5px
 }
 @media screen and (max-device-width: 600px) {
  header h3 a,
@@ -68,7 +68,7 @@ table {
   padding:0
  }
  .a1 {
-  margin-left:11px;
+  margin-left:15px;
  }
  .b1 {
   display:none;
@@ -203,128 +203,134 @@ table {
 	<fieldset class="cbi-section">
 		<h2>
 		<a>Associated Stations</a>
-		<input class="cbi-button cbi-button-reload" style="height:26px" title="Refresh the page" value="Refresh" type="button" onclick="window.location.reload();">
+		<input class="cbi-button cbi-button-reload" style="height:26px; width:105px" type="button" title="Auto Refresh - Associated Stations" id="mixBut" value="Auto Refresh" />
 		</h2>
 	</fieldset>
 
 	<% if mt1 == "" then %>
-	<fieldset class="cbi-section">
-	<table>
-		<thead>
-			<tr style="text-align:left">
-				<th>MAC-Address</th>
-				<th><div class="a1">Hostname</div></th>
-				<th><div class="a1">IPv4 (DHCP)</div></th>
-				<th><div class="b1">RSSI - 0/1/2/3</div></th>
-				<th><div class="b1">BW (T/R)</div></th>
-				<th><div class="b1">MCS (T/R)</div></th>
-				<th><div class="b1">GI (T/R)</div></th>
-				<th><div class="b1">Rate (T/R)</div></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><div class="m1"><%=MAC%></div></td>
-				<td><div class="a1"><%=Host%></div></td>
-				<td><div class="a1"><%=IP%></div></td>
-				<td><div class="b1"><%=RSSI%></div></td>
-				<td><div class="b1"><%=BW%></div></td>
-				<td><div class="b1"><%=MCS%></div></td>
-				<td><div class="b1" id="SGI"><%=SGI%></div></td>
-				<td><div class="b1" id="Rate"><%=Rate%></div></td>
-			</tr>
-		</tbody>
-	</table>
-	</fieldset>
+	<div id="refresh">
+		<fieldset class="cbi-section a">
+		<table>
+			<thead>
+				<tr style="text-align:left">
+					<th>MAC-Address</th>
+					<th><div class="a1">Hostname</div></th>
+					<th><div class="a1">IPv4 (DHCP)</div></th>
+					<th><div class="b1">RSSI - 0/1/2/3</div></th>
+					<th><div class="b1">BW (T/R)</div></th>
+					<th><div class="b1">MCS (T/R)</div></th>
+					<th><div class="b1">GI (T/R)</div></th>
+					<th><div class="b1">Rate (T/R)</div></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><div class="m1"><%=MAC%></div></td>
+					<td><div class="a1"><%=Host%></div></td>
+					<td><div class="a1"><%=IP%></div></td>
+					<td><div class="b1"><%=RSSI%></div></td>
+					<td><div class="b1"><%=BW%></div></td>
+					<td><div class="b1"><%=MCS%></div></td>
+					<td><div class="b1" id="SGI"><%=SGI%></div></td>
+					<td><div class="b1" id="Rate"><%=Rate%></div></td>
+				</tr>
+			</tbody>
+		</table>
+		</fieldset>
+	</div>
 	<% elseif mt1 == "mt7603" then %>
 	<big><a><b>mt7603</b></a></big>
-	<fieldset class="cbi-section">
-	<table>
-		<thead>
-			<tr style="text-align:left">
-				<th>MAC-Address</th>
-				<th><div class="a1">Hostname</div></th>
-				<th><div class="a1">IPv4 (DHCP)</div></th>
-				<th><div class="b1">RSSI - 0/1</div></th>
-				<th><div class="b1">BW</div></th>
-				<th><div class="b1">MCS</div></th>
-				<th><div class="b1">GI</div></th>
-				<th><div class="b1">Rate</div></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><div class="m1"><%=MAC2%></div></td>
-				<td><div class="a1"><%=Host2%></div></td>
-				<td><div class="a1"><%=IP2%></div></td>
-				<td><div class="b1"><%=RSSI2%></div></td>
-				<td><div class="b1"><%=BW2%></div></td>
-				<td><div class="b1"><%=MCS2%></div></td>
-				<td><div class="b1" id="SGI2"><%=SGI2%></div></td>
-				<td><div class="b1" id="Rate2"><%=Rate2%></div></td>
-			</tr>
-		</tbody>
-	</table>
-	</fieldset>
-	<br>
-	<big><a><b>mt7615</b></a></big>
-	<fieldset class="cbi-section">
-	<table>
-		<thead>
-			<tr style="text-align:left">
-				<th>MAC-Address</th>
-				<th><div class="a1">Hostname</div></th>
-				<th><div class="a1">IPv4 (DHCP)</div></th>
-				<th><div class="b1">RSSI - 0/1/2/3</div></th>
-				<th><div class="b1">BW (T/R)</div></th>
-				<th><div class="b1">MCS (T/R)</div></th>
-				<th><div class="b1">GI (T/R)</div></th>
-				<th><div class="b1">Rate (T/R)</div></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><div class="m1"><%=MAC%></div></td>
-				<td><div class="a1"><%=Host%></div></td>
-				<td><div class="a1"><%=IP%></div></td>
-				<td><div class="b1"><%=RSSI%></div></td>
-				<td><div class="b1"><%=BW%></div></td>
-				<td><div class="b1"><%=MCS%></div></td>
-				<td><div class="b1" id="SGI"><%=SGI%></div></td>
-				<td><div class="b1" id="Rate"><%=Rate%></div></td>
-			</tr>
-		</tbody>
-	</table>
-	</fieldset>
+	<div id="refresh">
+		<fieldset class="cbi-section a">
+		<table>
+			<thead>
+				<tr style="text-align:left">
+					<th>MAC-Address</th>
+					<th><div class="a1">Hostname</div></th>
+					<th><div class="a1">IPv4 (DHCP)</div></th>
+					<th><div class="b1">RSSI - 0/1</div></th>
+					<th><div class="b1">BW</div></th>
+					<th><div class="b1">MCS</div></th>
+					<th><div class="b1">GI</div></th>
+					<th><div class="b1">Rate</div></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><div class="m1"><%=MAC2%></div></td>
+					<td><div class="a1"><%=Host2%></div></td>
+					<td><div class="a1"><%=IP2%></div></td>
+					<td><div class="b1"><%=RSSI2%></div></td>
+					<td><div class="b1"><%=BW2%></div></td>
+					<td><div class="b1"><%=MCS2%></div></td>
+					<td><div class="b1" id="SGI2"><%=SGI2%></div></td>
+					<td><div class="b1" id="Rate2"><%=Rate2%></div></td>
+				</tr>
+			</tbody>
+		</table>
+		</fieldset>
+		<br>
+		<big><a><b>mt7615</b></a></big>
+		<fieldset class="cbi-section">
+		<table>
+			<thead>
+				<tr style="text-align:left">
+					<th>MAC-Address</th>
+					<th><div class="a1">Hostname</div></th>
+					<th><div class="a1">IPv4 (DHCP)</div></th>
+					<th><div class="b1">RSSI - 0/1/2/3</div></th>
+					<th><div class="b1">BW (T/R)</div></th>
+					<th><div class="b1">MCS (T/R)</div></th>
+					<th><div class="b1">GI (T/R)</div></th>
+					<th><div class="b1">Rate (T/R)</div></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><div class="m1"><%=MAC%></div></td>
+					<td><div class="a1"><%=Host%></div></td>
+					<td><div class="a1"><%=IP%></div></td>
+					<td><div class="b1"><%=RSSI%></div></td>
+					<td><div class="b1"><%=BW%></div></td>
+					<td><div class="b1"><%=MCS%></div></td>
+					<td><div class="b1" id="SGI"><%=SGI%></div></td>
+					<td><div class="b1" id="Rate"><%=Rate%></div></td>
+				</tr>
+			</tbody>
+		</table>
+		</fieldset>
+	</div>
 	<% else %>
-	<fieldset class="cbi-section">
-	<table>
-		<thead>
-			<tr style="text-align:left">
-				<th>MAC-Address</th>
-				<th><div class="a1">Hostname</div></th>
-				<th><div class="a1">IPv4 (DHCP)</div></th>
-				<th><div class="b1">RSSI - 0/1</div></th>
-				<th><div class="b1">BW</div></th>
-				<th><div class="b1">MCS</div></th>
-				<th><div class="b1">GI</div></th>
-				<th><div class="b1">Rate</div></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td><div class="m1"><%=MAC%></div></td>
-				<td><div class="a1"><%=Host%></div></td>
-				<td><div class="a1"><%=IP%></div></td>
-				<td><div class="b1"><%=RSSI%></div></td>
-				<td><div class="b1"><%=BW%></div></td>
-				<td><div class="b1"><%=MCS%></div></td>
-				<td><div class="b1" id="SGI"><%=SGI%></div></td>
-				<td><div class="b1" id="Rate"><%=Rate%></div></td>
-			</tr>
-		</tbody>
-	</table>
-	</fieldset>
+	<div id="refresh">
+		<fieldset class="cbi-section a">
+		<table>
+			<thead>
+				<tr style="text-align:left">
+					<th>MAC-Address</th>
+					<th><div class="a1">Hostname</div></th>
+					<th><div class="a1">IPv4 (DHCP)</div></th>
+					<th><div class="b1">RSSI - 0/1</div></th>
+					<th><div class="b1">BW</div></th>
+					<th><div class="b1">MCS</div></th>
+					<th><div class="b1">GI</div></th>
+					<th><div class="b1">Rate</div></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><div class="m1"><%=MAC%></div></td>
+					<td><div class="a1"><%=Host%></div></td>
+					<td><div class="a1"><%=IP%></div></td>
+					<td><div class="b1"><%=RSSI%></div></td>
+					<td><div class="b1"><%=BW%></div></td>
+					<td><div class="b1"><%=MCS%></div></td>
+					<td><div class="b1" id="SGI"><%=SGI%></div></td>
+					<td><div class="b1" id="Rate"><%=Rate%></div></td>
+				</tr>
+			</tbody>
+		</table>
+		</fieldset>
+	</div>
 	<% end %>
 </div>
 
@@ -332,6 +338,7 @@ table {
 <script src="/luci-static/resources/jquery/jquery-1.4.js"></script>
 <script type="text/javascript">
 function wifi_reload(url) {
+	Stop();
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
 	XHR.get(url, null,
@@ -347,50 +354,68 @@ function wifi_reload(url) {
 $('link[rel=stylesheet][href*="mobile.css"]').remove();
 
 function resizeTables(sharedSize) {
-  var tableArr = $('table[data-ss='+sharedSize+']');
-  var cellWidths = new Array();
-  $(tableArr).each(function() {
-	for(j = 0; j < $(this)[0].rows[0].cells.length; j++){
-		var cell = $($(this)[0].rows[0].cells[j]);
-		if (!cellWidths[j] || cellWidths[j] < cell.width()) cellWidths[j] = cell.width();
+	if ($(window).width() > 700) {
+	  var tableArr = $('table[data-ss='+sharedSize+']');
+	  var cellWidths = new Array();
+	  $(tableArr).each(function() {
+		for(j = 0; j < $(this)[0].rows[0].cells.length; j++){
+			var cell = $($(this)[0].rows[0].cells[j]);
+			if (!cellWidths[j] || cellWidths[j] < cell.width()) cellWidths[j] = cell.width();
+		}
+	  });
+	  $(tableArr).each(function() {
+		for(j = 0; j < $(this)[0].rows[0].cells.length; j++){
+			$(this)[0].rows[0].cells[j].style.width = cellWidths[j]+'px';
+		}
+	  });
 	}
-  });
-  $(tableArr).each(function() {
-	for(j = 0; j < $(this)[0].rows[0].cells.length; j++){
-		$(this)[0].rows[0].cells[j].style.width = cellWidths[j]+'px';
-	}
-  });
+}
+
+window.onresize = function() {
+	resizeTables('1');
 }
 
 function rgi() {
-<% if mt1 ~= "mt7612" then %>
-	$(SGI).text($(SGI).text().replace(/1\/1/g,'Short/Short'));
-	$(SGI).text($(SGI).text().replace(/1\/0/g,'Short/Long'));
-	$(SGI).text($(SGI).text().replace(/0\/1/g,'Long/Short'));
-	$(SGI).text($(SGI).text().replace(/0\/0/g,'Long/Long'));
-	$(Rate).text($(Rate).text().replace(/\n/g,' Mbit/s\n'));
-	<% if mt1 == "mt7603" then %>
-	$(SGI2).text($(SGI2).text().replace(/1/g,'Short'));
-	$(SGI2).text($(SGI2).text().replace(/0/g,'Long'));
-	$(Rate2).text($(Rate2).text().replace(/\n/g,' Mbit/s\n'));
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
-		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
-	});
-	<% end %>
-<% else %>
-	$(SGI).text($(SGI).text().replace(/1/g,'Short'));
-	$(SGI).text($(SGI).text().replace(/0/g,'Long'));
-	$(Rate).text($(Rate).text().replace(/\n/g,' Mbit/s\n'));
-	$(".ren").each(function() {
-		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
+		<% if mt1 == "mt7612" then %>
 		$(this).text($(this).text().replace('mt7615.2', 'mt7612'));
+		<% else %>
+		$(this).text($(this).text().replace('mt7615.2', 'mt7615'));
+		<% end %>
 	});
-<% end %>
+}
+
+var mixBut = document.getElementById("mixBut");
+mixBut.addEventListener("click", Start);
+timer = false;
+
+function Start(){
+	timer = setInterval(a, 5000);
+	mixBut.removeEventListener("click", Start);
+	mixBut.addEventListener("click", Stop);
+	mixBut.value = "Stop";
+}
+
+function Stop(){
+	if (timer != false) {
+		timer = clearInterval(timer);
+		mixBut.removeEventListener("click", Stop);
+		mixBut.addEventListener("click", Start);
+		mixBut.value = "Auto Refresh";
+		timer = false;
+	}
+}
+
+function a(){
+	if ($(".pause").length == 0) {
+		$(".a").addClass("pause");
+		$("#refresh").load(" #refresh > *");
+	}
 }
 
 window.onload = function() {
-  rgi()
+  <% if mt1 ~= "" then %>rgi()<% end %>
   resizeTables('1');
   setTimeout(
 	function(){
