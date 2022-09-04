@@ -89,7 +89,7 @@ table {
 	<form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg", devname, vifname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
 
 		<fieldset class="cbi-section" id="vif-cfg-apcli">
-			<legend> <a class="ren" name="apcli_scan_section">Wireless Repeater - <%=devname.."@"..vifname%> </a></legend>
+			<legend> <a class="ren" name="apcli_scan_section">AP-Client - <%=devname.."@"..vifname%> </a></legend>
 			<br />
 			<% if cfgs.WirelessMode == "10" then %>
 			<p class="left">
@@ -382,7 +382,7 @@ function rgi() {
 }
 
 window.onload = function() {
-	rgi()
+	rgi();
 	ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").options[document.getElementById("ApCliAuthMode").selectedIndex].value);
 	setTimeout(
 		function(){

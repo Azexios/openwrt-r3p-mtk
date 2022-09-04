@@ -30,11 +30,11 @@ end
 <style type="text/css">
 #container {visibility: hidden;}
 .a1 {
- margin-left:25px;
+ margin-left:21px;
  white-space:pre;
 }
 .b1 {
- margin-left:25px;
+ margin-left:21px;
  white-space:pre;
 }
 .m1 {
@@ -147,7 +147,7 @@ table {
 						<input class="cbi-button cbi-button-apply" style="width:100px" title="Enable this Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_enable", vif.vifname)%>")' />
 						<% end %>
 						<input class="cbi-button cbi-button-edit" style="width:100px" title="Edit this Wi-Fi network" value="Config" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_cfg_view", dev.devname, vif.vifname)%>'" />
-						<input class="cbi-button cbi-button-remove" style="width:100px" title="Delete this Wi-Fi network" value="Remove" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_del", dev.devname, vif.vifname)%>'" />
+						<input class="cbi-button cbi-button-remove" style="width:100px" title="Delete this Wi-Fi network" value="Remove" type="button" onclick="if (confirm('You are going to delete the interface <%=vif.vifname%>, are you sure?')) location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_del", dev.devname, vif.vifname)%>'" />
 					</td>
 				</tr>
 				<% end %>
@@ -341,6 +341,7 @@ function wifi_reload(url) {
 	Stop();
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
+	reload();
 	XHR.get(url, null,
 		function(x)
 		{
@@ -349,6 +350,14 @@ function wifi_reload(url) {
 			window.location.reload();
 		}
 	);
+}
+
+function reload() {
+	setInterval(function() {
+		if (navigator.onLine) {
+			window.location.reload();
+		}
+	}, 20000);
 }
 
 $('link[rel=stylesheet][href*="mobile.css"]').remove();
@@ -415,7 +424,7 @@ function a(){
 }
 
 window.onload = function() {
-  <% if mt1 ~= "" then %>rgi()<% end %>
+  <% if mt1 ~= "" then %>rgi();<% end %>
   resizeTables('1');
   setTimeout(
 	function(){

@@ -22,6 +22,7 @@ function __mtkwifi_reload(devname)
 			local diff = mtkwifi.diff_profile(profile)
 			-- Adding or deleting a vif will need to reinstall the wifi ko,
 			-- so we call "mtkwifi restart" here.
+			os.execute("cp -f "..profile.." "..mtkwifi.__profile_bak_path(profile))
 			if diff.BssidNum then
 				os.execute("/sbin/mtkwifi restart "..devname)
 			else
@@ -29,7 +30,6 @@ function __mtkwifi_reload(devname)
 			end
 			-- keep a backup for this commit
 			-- it will be used in mtkwifi.diff_profile()
-			os.execute("cp -f "..profile.." "..mtkwifi.__profile_bak_path(profile))
 		end
 	end
 end
@@ -323,7 +323,7 @@ function dev_cfg_reset(devname)
 end
 
 function vif_del(dev, vif)
-	nixio.syslog("debug", "MTK-Wi-Fi - vif_del("..dev..vif..")")
+	nixio.syslog("debug", "MTK-Wi-Fi - vif_del ("..dev.." - "..vif..")")
 	local devname,vifname = dev, vif
 	-- mtkwifi.debug("devname="..devname)
 	-- mtkwifi.debug("vifname="..vifname)
@@ -666,7 +666,7 @@ function vif_cfg(dev, vif)
 
 	for k,v in pairs(http.formvalue()) do
 		if type(v) == type("") or type(v) == type(0) then
-			nixio.syslog("debug", "post."..k.."="..tostring(v))
+			-- nixio.syslog("debug", "post."..k.."="..tostring(v))
 		else
 			nixio.syslog("debug", "post."..k.." invalid, type="..type(v))
 		end

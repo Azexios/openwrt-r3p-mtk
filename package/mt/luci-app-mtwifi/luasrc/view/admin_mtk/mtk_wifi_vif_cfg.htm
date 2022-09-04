@@ -100,7 +100,7 @@ table {
 	local diff = mtkwifi.diff_profile(dev.profile)
 	if next(diff) ~= nil then
 	%>
-	<span style="color:red;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
+	<span id="reload" style="color:red; display:none;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
 	<%
 	end
 	%>
@@ -452,10 +452,10 @@ table {
 		<div class="cbi-page-actions">
 			<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
 			<input class="cbi-button cbi-button-positive" value="Save" type="submit" />
-			<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='save_apply()' />
+			<input class="cbi-button cbi-button-apply" value="Save & Apply" type="submit" onclick='save_apply()' />
 			<input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
 		</div>
-	<% end %> 
+	<% end %>
 	</form>
 </div>
 
@@ -465,6 +465,7 @@ table {
 function wifi_reload(url) {
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
+	reload();
 	XHR.get(url, null,
 		function(x)
 		{
@@ -475,9 +476,16 @@ function wifi_reload(url) {
 	);
 }
 
+function reload() {
+	setInterval(function() {
+		if (navigator.onLine) {
+			window.location.reload();
+		}
+	}, 20000);
+}
+
 function save_apply() {
-	window.scrollTo(0, 0);
-	document.getElementById('loading').style.display="";
+	sessionStorage.setItem("save_apply", "true");
 }
 
 function AuthMode_onchange(to) {
@@ -560,9 +568,6 @@ function AuthMode_onchange(to) {
 	}
 }
 
-<% if mt1 == "" then %>
-window.onload = AuthMode_onchange(document.getElementById("AuthMode").options[document.getElementById("AuthMode").selectedIndex].value)
-<% else %>
 function rgi() {
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
@@ -575,14 +580,24 @@ function rgi() {
 }
 
 window.onload = function() {
-	rgi()
 	AuthMode_onchange(document.getElementById("AuthMode").options[document.getElementById("AuthMode").selectedIndex].value);
+	var reloading = sessionStorage.getItem("save_apply");
+	if ($("#reload").length > 0) {
+		if (reloading) {
+			sessionStorage.removeItem("save_apply");
+			wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");
+		} else {
+			document.getElementById('reload').style.display="";
+		}
+	}
+	<% if mt1 ~= "" then %>
+	rgi();
 	setTimeout(
 		function(){
 			document.getElementById("container").style.visibility = "visible";
 		}, 100);
+	<% end %>
 }
-<% end %>
 </script>
 
 <%+footer%>

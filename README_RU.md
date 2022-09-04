@@ -1,4 +1,5 @@
-Для сборки прошивки я использую **Ubuntu 22.04 LTS** (на других OS не проверял).
+Для сборки прошивки я использую **Ubuntu 22.04 LTS** (на других OS не проверял).  
+*Инструкция только о том как заменить драйвер, Вы должны уметь собирать OpenWrt из исходников.*
 
 1. Клонировать исходный код и перенести в каталог openwrt (вместо /home/alex/openwrt указать свой путь до openwrt):
 
@@ -37,8 +38,3 @@ cd openwrt-r3p-mtk
 git pull
 rsync -av target/ /home/alex/openwrt/target && rsync -av --delete package/mt/ /home/alex/openwrt/package/mt
 ```
----
-### При сборке OpenWrt 22.03
-Заменить "time_t" на "time64_t":  
-https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7603e/src/mt7603_wifi/common/bn_lib.c#L6400
-https://github.com/Azexios/openwrt-r3p-mtk/blob/1a6e953fda106788b4862c6a0317afd0dfdd6272/package/mt/drivers/mt7615d/src/mt_wifi/embedded/security/bn_lib.c#L6429
