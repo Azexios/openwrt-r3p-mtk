@@ -11,10 +11,10 @@
 
 2. Перейти в каталог openwrt, удалить свой .config - запустить make menuconfig, выбрать своё устройство, перейти в раздел - LuCI > Applications - включить <\*> luci-app-mtwifi, далее в Kernel modules > Wireless Drivers > включить <\*> нужный драйвер/драйвера mtk и зайти в их настройки (выбрать нужные параметры или использовать дефолтные), запомнить настройки/сделать скриншоты и аналогично с Network > Wireless > mt_wifi - MT_WIFI Configuration.
 
-3. Скачать конфиг (для сборки OpenWrt с правильным .vermagiс), ниже пример для OpenWrt 21.02.3 и устройств с CPU mt7621:
+3. Скачать конфиг (для сборки OpenWrt с правильным .vermagiс), ниже пример для OpenWrt 22.03.0 и устройств с CPU mt7621:
 
     ```bash
-    wget -O .config https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/config.buildinfo
+    wget -O .config https://downloads.openwrt.org/releases/22.03.0/targets/ramips/mt7621/config.buildinfo
     make defconfig
     ```
 
@@ -22,7 +22,7 @@
 В LuCI > Applications - включить <\*> luci-app-mtwifi.  
 В Network > Wireless - выставить настройки в mt_wifi из 2 пункта.  
 В Network > WirelessAPD - отключить wpad-basic-wolfssl и выбрать как модуль \<M> hostapd-common.  
-Не обязательно - открыть profiles.json (для mt7621 и OpenWrt 21.02.3 - https://downloads.openwrt.org/releases/21.02.3/targets/ramips/mt7621/profiles.json), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно включить в прошивку.
+Не обязательно - открыть profiles.json (для mt7621 и OpenWrt 22.03.0 - https://downloads.openwrt.org/releases/22.03.0/targets/ramips/mt7621/profiles.json), найти своё устройство и посмотреть какие пакеты (device_packages, кроме Wi-Fi драйверов) нужно дополнительно включить в прошивку.
 
 5. Выйти, сохранив настройки и собрать прошивку:
 
