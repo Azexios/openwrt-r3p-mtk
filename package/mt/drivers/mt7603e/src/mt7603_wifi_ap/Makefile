@@ -963,7 +963,7 @@ ifeq ($(CONFIG_ROAMING_ENHANCE_SUPPORT),y)
 ccflags-y += -DROAMING_ENHANCE_SUPPORT
 endif
 
-ifeq ($(CONFIG_MT7603E_WPA3_SUPPORT),y)
+ifeq ($(CONFIG_WPA3_SUPPORT),y)
     EXTRA_CFLAGS += -DDOT11_SAE_SUPPORT
     SRC_EMBEDDED_DIR = $(RT_WIFI_DIR)
     spec_objs += $(SRC_EMBEDDED_DIR)/common/sae.o
@@ -972,12 +972,12 @@ ifeq ($(CONFIG_MT7603E_WPA3_SUPPORT),y)
     spec_objs += $(SRC_EMBEDDED_DIR)/common/bn_lib.o
     spec_objs += $(SRC_EMBEDDED_DIR)/common/ecc.o
     EXTRA_CFLAGS += -DDOT11_SAE_OPENSSL_BN
-    ifeq ($(CONFIG_MT7603E_APCLI_SUPPORT),y)
+    ifeq ($(CONFIG_APCLI_SUPPORT),y)
         EXTRA_CFLAGS += -DAPCLI_SAE_SUPPORT
     endif
 endif
 
-ifeq ($(CONFIG_MT7603E_OWE_SUPPORT),y)
+ifeq ($(CONFIG_OWE_SUPPORT),y)
     EXTRA_CFLAGS += -DCONFIG_OWE_SUPPORT -DDOT11_SAE_OPENSSL_BN
     SRC_EMBEDDED_DIR = $(RT_WIFI_DIR)
     spec_objs += $(SRC_EMBEDDED_DIR)/common/owe.o
@@ -985,7 +985,7 @@ ifeq ($(CONFIG_MT7603E_OWE_SUPPORT),y)
     spec_objs += $(SRC_EMBEDDED_DIR)/common/crypt_biginteger.o
     spec_objs += $(SRC_EMBEDDED_DIR)/common/bn_lib.o
     spec_objs += $(SRC_EMBEDDED_DIR)/common/ecc.o
-    ifeq ($(CONFIG_MT7603E_APCLI_SUPPORT),y)
+    ifeq ($(CONFIG_APCLI_SUPPORT),y)
         EXTRA_CFLAGS += -DAPCLI_OWE_SUPPORT
     endif
 endif
