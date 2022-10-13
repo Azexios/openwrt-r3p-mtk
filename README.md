@@ -1,4 +1,4 @@
-# MTK Wi-Fi driver for OpenWrt 22.03.0
+# MTK Wi-Fi driver for OpenWrt 22.03.1
 #### For Xiaomi Mi R3P and devices using:
 - MT7615+MT7615  
 - MT7603+MT7615  

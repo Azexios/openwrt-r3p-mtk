@@ -207,7 +207,7 @@ table {
 			<tr>
 				<td>Key</td>
 				<td>
-				<input value="<%=vif.__wpapsk%>" type="text" name="<%="WPAPSK"..vifidx%>" id="<%="WPAPSK"..vifidx%>" />
+				<input value="<%=vif.__wpapsk%>" type="text" name="<%="WPAPSK"..vifidx%>" id="<%="WPAPSK"..vifidx%>" /><span class="he1">8~63 symbols</span>
 				</td>
 			</tr>
 			</tbody>
@@ -431,6 +431,17 @@ table {
 				<% end %> type="checkbox" />
 				</td>
 			</tr>
+			<% if vifname == "ra0" or vifname == "rai0" then %>
+			<tr>
+				<td>Add <%=vifname%> to br-lan</td>
+				<td>
+				<input name="__lan" value="1"
+				<% if mtkwifi.token_get(cfgs["EAPifname"], vifidx, 0) == "br-lan" then %>
+				checked="checked"
+				<% end %> type="checkbox" />
+				</td>
+			</tr>
+			<% end %>
 	<!--
 			<tr>
 				<td>TX Rate</td>

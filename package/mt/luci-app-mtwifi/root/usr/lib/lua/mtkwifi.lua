@@ -436,7 +436,7 @@ function mtkwifi.token_set(str, n, v)
 	if not str then return end
 	local tmp = mtkwifi.__cfg2list(str)
 	if type(v) ~= type("") and type(v) ~= type(0) then
-		nixio.syslog("debug", "MTK-Wi-Fi - err", "invalid value type in token_set, "..type(v))
+		nixio.syslog("debug", "MTK-Wi-Fi: err, invalid value type in token_set, "..type(v))
 		return
 	end
 	if #tmp < tonumber(n) then
@@ -651,7 +651,7 @@ function mtkwifi.get_all_devs()
 			-- mtkwifi.debug("loading profile"..profile)
 			local cfgs = mtkwifi.load_profile(profile)
 			if not cfgs then
-				nixio.syslog("debug", "MTK-Wi-Fi - error loading profile"..profile)
+				nixio.syslog("debug", "MTK-Wi-Fi: error loading "..profile)
 				-- mtkwifi.debug("err", "error loading "..profile)
 				return
 			end

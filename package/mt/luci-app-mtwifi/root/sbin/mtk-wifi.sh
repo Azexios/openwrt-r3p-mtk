@@ -9,12 +9,9 @@ done
 
 sleep 60
 
-# For MT7621
-# Move 2.4GHz and 5GHz MTK-Wi-Fi to CPU1 and CPU2
-
-mask=2
+mask=4
 for irq in $(grep -E 'ra(.{0,1}0)' /proc/interrupts | cut -d: -f1 | sed 's, *,,')
 do
 	echo "$mask" > "/proc/irq/$irq/smp_affinity"
-	mask=4
+	mask=8
 done

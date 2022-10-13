@@ -375,7 +375,21 @@ function vif_disable(iface)
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
 
-function vif_enable(iface)
+function vif_enable(dev, iface)
+	local devname = dev
+	local profiles = mtkwifi.search_dev_and_profile()
+	assert(profiles[devname])
+
+	local cfgs = mtkwifi.load_profile(profiles[devname])
+
+	if iface == "ra0" or iface == "rai0" then
+		if cfgs.EAPifname == "br-lan" then
+			mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..iface.." && echo 1")
+			if mt_lan ~= "1\n" then
+				os.execute("uci add_list network.cfg030f15.ports='"..iface.."'; uci commit network; logger -t MTK-Wi-Fi Add "..iface.." to br-lan; service network reload")
+			end
+		end
+	end
 	os.execute("ifconfig "..iface.." up")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
@@ -705,8 +719,24 @@ function vif_cfg(dev, vif)
 
 		__security_cfg(cfgs, vif_idx)
 
+	if vifname == "ra0" or vifname == "rai0" then
+		mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..vifname.." && echo 1")
+		if http.formvalue("__lan") == "1" then
+			cfgs.EAPifname = "br-lan"
+			if mt_lan ~= "1\n" then
+				os.execute("uci add_list network.cfg030f15.ports='"..vifname.."'; uci commit network; logger -t MTK-Wi-Fi Add "..vifname.." to br-lan; service network reload")
+			end
+		else
+			cfgs.EAPifname = ""
+			if mt_lan == "1\n" then
+				os.execute("uci del_list network.cfg030f15.ports='"..vifname.."'; uci commit network; logger -t MTK-Wi-Fi Remove "..vifname.." from br-lan; service network reload")
+			end
+		end
+	end
+
 	-- mtkwifi.debug(devname, profile)
 	mtkwifi.save_profile(cfgs, profile)
+
 	if http.formvalue("__apply") then
 		__mtkwifi_reload(devname)
 		luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))

@@ -44,6 +44,11 @@ table {
  border-collapse:separate;
  border-spacing:0px 5px
 }
+@media screen and (min-device-width: 601px) {
+ .b2 {
+  display:none;
+ }
+}
 @media screen and (max-device-width: 600px) {
  header h3 a,
  header .brand {
@@ -71,6 +76,9 @@ table {
   margin-left:15px;
  }
  .b1 {
+  display:none;
+ }
+ .a2 {
   display:none;
  }
 }
@@ -142,9 +150,14 @@ table {
 						<% if not vif.state then %>
 						<input class="cbi-button cbi-button-apply" style="width:100px" title="Enable this Wi-Fi network" value="Enable" type="button" onclick="alert('Please restart manually to create this interface.')" />
 						<% elseif vif.state == "up" then %>
-						<input class="cbi-button cbi-button-reset" style="width:100px" title="Disable this Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_disable", vif.vifname)%>")' />
+						<span class="a2">
+							<input class="cbi-button cbi-button-reset" style="width:100px" title="Disable this Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_disable", vif.vifname)%>")' />
+						</span>
+						<span class="b2">
+							<input class="cbi-button cbi-button-reset" style="width:100px" title="Disable this Wi-Fi network" value="Disable" type="button" onclick="if (confirm('Are you sure?')) location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_disable", vif.vifname)%>'" />
+						</span>
 						<% else %>
-						<input class="cbi-button cbi-button-apply" style="width:100px" title="Enable this Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_enable", vif.vifname)%>")' />
+						<input class="cbi-button cbi-button-apply" style="width:100px" title="Enable this Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_enable", dev.devname, vif.vifname)%>")' />
 						<% end %>
 						<input class="cbi-button cbi-button-edit" style="width:100px" title="Edit this Wi-Fi network" value="Config" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_cfg_view", dev.devname, vif.vifname)%>'" />
 						<input class="cbi-button cbi-button-remove" style="width:100px" title="Delete this Wi-Fi network" value="Remove" type="button" onclick="if (confirm('You are going to delete the interface <%=vif.vifname%>, are you sure?')) location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "vif_del", dev.devname, vif.vifname)%>'" />
