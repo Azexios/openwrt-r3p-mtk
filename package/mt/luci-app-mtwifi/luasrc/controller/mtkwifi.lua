@@ -181,6 +181,7 @@ function index()
 	entry({"admin", "network", "wifi", "apcli_cfg"}, call("apcli_cfg")).leaf = true
 	entry({"admin", "network", "wifi", "apcli_disconnect"}, call("apcli_disconnect")).leaf = true
 	entry({"admin", "network", "wifi", "apcli_connect"}, call("apcli_connect")).leaf = true
+	entry({"admin", "network", "wifi", "apcli_connect_ch0"}, call("apcli_connect_ch0")).leaf = true
 	entry({"admin", "network", "wifi", "apcli_scan"}, call("apcli_scan")).leaf = true;
 end
 
@@ -384,8 +385,8 @@ function vif_enable(dev, iface)
 
 	if iface == "ra0" or iface == "rai0" then
 		if cfgs.EAPifname == "br-lan" then
-			mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..iface.." && echo 1")
-			if mt_lan ~= "1\n" then
+			local mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..iface.." && echo -n 1")
+			if mt_lan ~= "1" then
 				os.execute("uci add_list network.cfg030f15.ports='"..iface.."'; uci commit network; logger -t MTK-Wi-Fi Add "..iface.." to br-lan; service network reload")
 			end
 		end
@@ -720,15 +721,15 @@ function vif_cfg(dev, vif)
 		__security_cfg(cfgs, vif_idx)
 
 	if vifname == "ra0" or vifname == "rai0" then
-		mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..vifname.." && echo 1")
+		local mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..vifname.." && echo -n 1")
 		if http.formvalue("__lan") == "1" then
 			cfgs.EAPifname = "br-lan"
-			if mt_lan ~= "1\n" then
+			if mt_lan ~= "1" then
 				os.execute("uci add_list network.cfg030f15.ports='"..vifname.."'; uci commit network; logger -t MTK-Wi-Fi Add "..vifname.." to br-lan; service network reload")
 			end
 		else
 			cfgs.EAPifname = ""
-			if mt_lan == "1\n" then
+			if mt_lan == "1" then
 				os.execute("uci del_list network.cfg030f15.ports='"..vifname.."'; uci commit network; logger -t MTK-Wi-Fi Remove "..vifname.." from br-lan; service network reload")
 			end
 		end
@@ -737,10 +738,10 @@ function vif_cfg(dev, vif)
 	-- mtkwifi.debug(devname, profile)
 	mtkwifi.save_profile(cfgs, profile)
 
-	if http.formvalue("__apply") then
-		__mtkwifi_reload(devname)
-		luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
-	end
+	-- if http.formvalue("__apply") then
+		-- __mtkwifi_reload(devname)
+		-- luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
+	-- end
 	return luci.http.redirect(to_url)
 end
 
@@ -790,17 +791,10 @@ function apcli_cfg(dev, vif)
 			cfgs[k] = v or ""
 		end
 	end
-	
-	if cfgs.Channel == "0" then -- Auto Channel Select
-		cfgs.AutoChannelSelect = "3"
-	else
-		cfgs.AutoChannelSelect = "0"
-		cfgs.ACSCheckTime = "0"
-	end
 
 	cfgs.ApCliSsid = ''..mtkwifi.__handleSpecialChars(http.formvalue("ApCliSsid"))
 	local __authmode = http.formvalue("ApCliAuthMode")
-	
+
 	if __authmode == "WPA3PSK" or __authmode == "OWE" then
 		cfgs.ApCliPMFMFPC= "1"
 		cfgs.ApCliPMFMFPR= "1"
@@ -832,12 +826,27 @@ function apcli_cfg(dev, vif)
 		cfgs.ApCliEncrypType = http.formvalue("_wpa_ApCliEncrypType")
 	end
 
+	if cfgs.Channel == "0" then
+		if vifname == "apcli0" then
+			cfgs.Channel = "1"
+		else
+			cfgs.Channel = "36"
+		end
+	end
+
+	cfgs.ApCliEnable = "1"
+	cfgs.AutoChannelSelect = "0"
+	cfgs.ACSCheckTime = "0"
+
 	mtkwifi.save_profile(cfgs, profiles[devname])
 
-	if http.formvalue("__apply") then
-		apcli_connect(dev, vif)
+	if http.formvalue("__apcli_auto") == "1" then
+		os.execute("grep -q 'ApCliAuto=1' /etc/wireless/mt7615/"..devname..".dat || sed -i 's/ApCliAuto=0/ApCliAuto=1/' /etc/wireless/mt7615/"..devname..".dat")
+	else
+		os.execute("grep -q 'ApCliAuto=0' /etc/wireless/mt7615/"..devname..".dat || sed -i 's/ApCliAuto=1/ApCliAuto=0/' /etc/wireless/mt7615/"..devname..".dat")
 	end
-	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
+
+	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg_view", dev, vif))
 end
 
 function apcli_connect(dev, vif)
@@ -854,7 +863,10 @@ function apcli_connect(dev, vif)
 	assert(profiles[devname])
 
 	local cfgs = mtkwifi.load_profile(profiles[devname])
+	local apcli_auto = mtkwifi.read_pipe("grep -q 'ApCliAuto=1' /etc/wireless/mt7615/"..devname..".dat && echo -n 1")
+
 	cfgs.ApCliEnable = "1"
+
 	mtkwifi.save_profile(cfgs, profiles[devname])
 	os.execute("ifconfig "..vifname.." up")
 	os.execute("iwpriv "..vifname.." set ApCliEnable=0")
@@ -873,9 +885,37 @@ function apcli_connect(dev, vif)
 		os.execute("iwpriv "..vifname.." set ApCliWPAPSK="..cfgs.ApCliWPAPSK)
 	end
 	os.execute("iwpriv "..vifname.." set ApCliSsid=\""..cfgs.ApCliSsid.."\"")
-	os.execute("iwpriv "..vifname.." set ApCliEnable=1")
+
+	if apcli_auto == "1" then
+		os.execute("iwpriv "..vifname.." set ApCliAutoConnect=3")
+	else
+		os.execute("iwpriv "..vifname.." set ApCliEnable=1")
+	end
 	__mtkwifi_save_apcli(devname)
-	os.execute("sleep 5")
+end
+
+function apcli_connect_ch0(dev, vif)
+	local devname,vifname = dev, vif
+	local profiles = mtkwifi.search_dev_and_profile()
+	assert(profiles[devname])
+
+	local cfgs = mtkwifi.load_profile(profiles[devname])
+
+	cfgs.ApCliEnable = "1"
+
+	if cfgs.Channel == "0" then
+		if vifname == "apcli0" then
+			cfgs.Channel = "1"
+		else
+			cfgs.Channel = "36"
+		end
+		cfgs.AutoChannelSelect = "0"
+		cfgs.ACSCheckTime = "0"
+	end
+
+	mtkwifi.save_profile(cfgs, profiles[devname])
+	os.execute("ifconfig "..vifname.." up")
+	__mtkwifi_reload(devname)
 end
 
 function apcli_disconnect(dev, vif)
@@ -884,6 +924,7 @@ function apcli_disconnect(dev, vif)
 	--  2. mt7615e.1.apclix0	 # multi-card
 	--  3. mt7615e.1.2G.apclix0  # multi-card & multi-profile
 	local devname,vifname = dev, vif
+	local apcli_auto = mtkwifi.read_pipe("grep -q 'ApCliAuto=1' /etc/wireless/mt7615/"..devname..".dat && echo -n 1")
 	-- mtkwifi.debug("devname=", dev, "vifname", vif)
 	-- mtkwifi.debug(devname)
 	-- mtkwifi.debug(vifname)
@@ -893,7 +934,13 @@ function apcli_disconnect(dev, vif)
 	local cfgs = mtkwifi.load_profile(profiles[devname])
 	cfgs.ApCliEnable = "0"
 	mtkwifi.save_profile(cfgs, profiles[devname])
+	os.execute("iwpriv "..vifname.." set ApCliAutoConnect=0")
 	os.execute("iwpriv "..vifname.." set ApCliEnable=0")
 	os.execute("ifconfig "..vifname.." down")
-	__mtkwifi_save_apcli(devname)
+
+	if apcli_auto == "1" then
+		__mtkwifi_reload(devname)
+	else
+		__mtkwifi_save_apcli(devname)
+	end
 end

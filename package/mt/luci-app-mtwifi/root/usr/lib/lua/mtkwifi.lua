@@ -207,7 +207,7 @@ function mtkwifi.load_profile(path, raw)
 	-- convert profile into lua table
 	for _,line in ipairs(mtkwifi.__lines(content)) do
 		line = mtkwifi.__trim(line)
-		if string.byte(line) ~= string.byte("#") then
+		--if string.byte(line) ~= string.byte("#") then
 			local i = string.find(line, "=")
 			if i then
 				local k,v
@@ -217,12 +217,12 @@ function mtkwifi.load_profile(path, raw)
 					-- mtkwifi.debug("warning", "skip repeated key"..line)
 				end
 				cfgs[mtkwifi.__trim(k)] = mtkwifi.__trim(v) or ""
-			else
+			--else
 				-- mtkwifi.debug("warning", "skip line without '=' "..line)
 			end
-		else
+		--else
 			-- mtkwifi.debug("warning", "skip comment line "..line)
-		end
+		--end
 	end
 	return cfgs
 end
@@ -339,29 +339,29 @@ local DevicePropertyMap = {
 
 local AuthModeList = {
 	"Disable",
-	"OPEN",--OPENWEP
-	"SHARED",--SHAREDWEP
-	"WEPAUTO",
-	"WPA2",
+	--"OPEN",--OPENWEP
+	--"SHARED",--SHAREDWEP
+	--"WEPAUTO",
+	--"WPA2",
 	"WPA2PSK",
-	"WPAPSKWPA2PSK",
 	"WPA3PSK",
+	"WPAPSKWPA2PSK",
 	"WPA2PSKWPA3PSK",
 	"OWE",
-	"WPA1WPA2",
-	"IEEE8021X",
+	--"WPA1WPA2",
+	--"IEEE8021X",
 }
 
 local AuthModeList12 = {
 	"Disable",
-	"OPEN",--OPENWEP
-	"SHARED",--SHAREDWEP
-	"WEPAUTO",
-	"WPA2",
+	--"OPEN",--OPENWEP
+	--"SHARED",--SHAREDWEP
+	--"WEPAUTO",
+	--"WPA2",
 	"WPA2PSK",
 	"WPAPSKWPA2PSK",
-	"WPA1WPA2",
-	"IEEE8021X",
+	--"WPA1WPA2",
+	--"IEEE8021X",
 }
 
 local WpsEnableAuthModeList = {
@@ -719,6 +719,16 @@ function mtkwifi.get_all_devs()
 			elseif cfgs.HT_BW == "1" and cfgs.VHT_BW == "3" then
 				devs[i].__bw = "161"
 			end
+
+			if not mtkwifi.exists("/etc/wireless/mt7603/") then
+				mt1 = ""
+			elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
+				mt1 = "mt7612"
+			else
+				mt1 = "mt7603"
+			end
+
+			devs[i]._apcli_auto = mtkwifi.read_pipe("grep -q 'ApCliAuto=1' /etc/wireless/mt7615/"..devname..".dat && echo -n 1")
 
 			devs[i].vifs = mtkwifi.__setup_vifs(cfgs, devname, devs[i].mainidx, devs[i].subidx)
 			devs[i].apcli = mtkwifi.__setup_apcli(cfgs, devname, devs[i].mainidx, devs[i].subidx)

@@ -34,18 +34,16 @@ local vifname = request[6] or dev.apcli.vifname
 assert(vifname)
 vif = dev and dev.vifs[vifname] or nil
 vifidx = vif and vif.vifidx or nil
---print(devs, dev, dev.apcli, devname, vifname)
+--print(devs, dev, dev.apcli, devname, vifname, vif, vifidx)
+
+if vifname == "apcli0" then
+	raa = "ra*"
+else
+	raa = "rai*"
+end
 
 local cfgs = mtkwifi.load_profile(dev.profile)
 local debug = 0
-
-if not mtkwifi.exists("/etc/wireless/mt7603/") then
-	mt1 = ""
-elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
-	mt1 = "mt7612"
-else
-	mt1 = "mt7603"
-end
 %>
 
 <style type="text/css">
@@ -60,6 +58,12 @@ table {
  color:red;
  margin-left:8px;
  white-space:pre;
+}
+.mh {
+ color:#1976D7;
+ font-weight:900;
+ font-size:1.1rem;
+ white-space:pre-wrap;
 }
 @media screen and (max-device-width: 600px) {
  header .pull-right {
@@ -89,7 +93,16 @@ table {
 	<form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg", devname, vifname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
 
 		<fieldset class="cbi-section" id="vif-cfg-apcli">
-			<legend> <a class="ren" name="apcli_scan_section">AP-Client - <%=devname.."@"..vifname%> </a></legend>
+			<legend> <a class="ren" name="apcli_scan_section">AP-Client - <%=devname.."@"..vifname%> </a>
+			<%
+			local diff = mtkwifi.diff_profile(dev.profile)
+			if next(diff) ~= nil then
+			%>
+			<span id="reload" style="color:red; display:none;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
+			<%
+				end
+			%>
+			</legend>
 			<br />
 			<% if cfgs.WirelessMode == "10" then %>
 			<p class="left">
@@ -123,6 +136,15 @@ table {
 						<input type="text" name="Channel" id="Channel" value="<%=cfgs.Channel%>"/><span class="he1">This will overwrite ap channel.</span>
 					</td>
 					
+				</tr>
+				<tr>
+					<td>Auto Channel Selection<span id="apcli_auto" class="mh" style="visibility: hidden;" data-tooltip="For correct operation of auto channel selection, the access point (<%=raa%>) must be turned on. 
+In case of loss of connection, the client (<%=vifname%>) will continuously cycle through channels - 
+which can lead to loss of connection with the Wi-Fi access point (<%=raa%>).">*</span></td>
+					<td>
+						<input type="radio" name="__apcli_auto" onchange="ApCliAuto_onchange(1);" value="1" <% if dev._apcli_auto == "1" then %> checked="checked"<% end %>/> Enable
+						<input type="radio" name="__apcli_auto" onchange="ApCliAuto_onchange(0);" value="0" <% if dev._apcli_auto == "" then %> checked="checked"<% end %>/> Disable
+					</td>
 				</tr>
 				<tr>
 					<td>Root AP Authentication Mode</td>
@@ -206,11 +228,11 @@ table {
 				</tbody>
 			</table>
 		</fieldset>
-		
+
 		<div class="cbi-page-actions" id="apcli_form_buttons">
 			<input class="cbi-button cbi-button-link" value="Back" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi")%>'" />
 			<input class="cbi-button cbi-button-positive" value="Save" type="submit" />
-			<input class="cbi-button cbi-button-apply" name="__apply" value="Save & Apply" type="submit" onclick='save_apply()' />
+			<input class="cbi-button cbi-button-apply" value="Save & Apply" type="submit" onclick='save_apply()' />
 			<input class="cbi-button cbi-button-reset" value="Reset" type="reset" />
 		</div>
 	</form>
@@ -219,9 +241,43 @@ table {
 
 <script src="/luci-static/resources/jquery/jquery-1.4.js"></script>
 <script type="text/javascript">
-function save_apply() {
+function wifi_reload(url) {
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
+	reload();
+	XHR.get(url, null,
+		function(x)
+		{
+			console.log(x);
+			document.location.href = "<%=luci.dispatcher.build_url("admin", "network", "wifi")%>";
+		}
+	);
+}
+
+function reload() {
+	setTimeout(function(){
+		setInterval(function() {
+			if (navigator.onLine) {
+				document.location.href = "<%=luci.dispatcher.build_url("admin", "network", "wifi")%>";
+			}
+		}, 5000);
+	}, 25000);
+}
+
+function save_apply() {
+	localStorage.setItem("<%=vifname%>_update", "true");
+	sessionStorage.setItem("save_apply", "true");
+	<% if cfgs.Channel == "0" then %>
+	sessionStorage.setItem("ch_0", "true");
+	<% end %>
+}
+
+function ApCliAuto_onchange(a) {
+	if (a == "1") {
+		document.getElementById('apcli_auto').style.visibility = "visible";
+	} else {
+		document.getElementById('apcli_auto').style.visibility = "hidden";
+	}
 }
 
 function decode_ssid(ssid)
@@ -338,18 +394,21 @@ function ApCliAuthMode_onchange(to) {
 function choose_rootap(index) {
 	document.getElementById("ApCliSsid").value=decode_ssid(ap_list[index].ssid);
 	document.getElementById("Channel").value=ap_list[index].channel;
-	if (ap_list[index].authmode == "WPA3PSK" || ap_list[index].authmode == "WPA2PSKWPA3PSK") {
+	if (ap_list[index].authmode == "WPA3PSK") {
 		document.getElementById("ApCliAuthMode").value="WPA3PSK";
+	} else if (ap_list[index].authmode == "WPA2PSKWPA3PSK") {
+		document.getElementById("ApCliAuthMode").value="WPA2PSK";
 	} else if (ap_list[index].authmode == "WPA2PSK" || ap_list[index].authmode == "WPAPSKWPA2PSK") {
 		document.getElementById("ApCliAuthMode").value="WPA2PSK";
 	} else if (ap_list[index].authmode == "OWE") {
 		document.getElementById("ApCliAuthMode").value="OWE";
 	} else {
-	document.getElementById("ApCliAuthMode").value=ap_list[index].authmode;
+		document.getElementById("ApCliAuthMode").value=ap_list[index].authmode;
 	}
 	if (ap_list[index].authmode == "WPA2PSK"
 	 || ap_list[index].authmode == "WPAPSK"
-	 || ap_list[index].authmode == "WPAPSKWPA2PSK") {
+	 || ap_list[index].authmode == "WPAPSKWPA2PSK"
+	 || ap_list[index].authmode == "WPA2PSKWPA3PSK") {
 		document.getElementById("_wpa_ApCliEncrypType").value=ap_list[index].encrypttype;
 	} else if (ap_list[index].authmode == "OPEN" || ap_list[index].authmode == "SHARED") {
 		if (ap_list[index].encrypttype == "NONE")
@@ -367,9 +426,7 @@ function choose_rootap(index) {
 	location.href="#apcli_cfg_section";
 }
 
-<% if mt1 == "" then %>
-window.onload = ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").options[document.getElementById("ApCliAuthMode").selectedIndex].value)
-<% else %>
+<% if mt1 ~= "" then %>
 function rgi() {
 	$(".ren").each(function() {
 		$(this).text($(this).text().replace('mt7615.1', 'mt7603'));
@@ -380,16 +437,35 @@ function rgi() {
 		<% end %>
 	});
 }
+<% end %>
 
 window.onload = function() {
-	rgi();
 	ApCliAuthMode_onchange(document.getElementById("ApCliAuthMode").options[document.getElementById("ApCliAuthMode").selectedIndex].value);
+	ApCliAuto_onchange(document.querySelector('input[name=__apcli_auto]:checked').value); 
+	if ($("#reload").length > 0) {
+		var reloading = sessionStorage.getItem("save_apply");
+		var ch0 = sessionStorage.getItem("ch_0");
+		if (reloading) {
+			if (ch0) {
+				sessionStorage.removeItem("save_apply");
+				sessionStorage.removeItem("ch_0");
+				wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect_ch0", dev.devname, dev.apcli.vifname)%>");
+			} else {
+				sessionStorage.removeItem("save_apply");
+				wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>");
+			}
+		} else {
+			document.getElementById('reload').style.display="";
+		}
+	}
+	<% if mt1 ~= "" then %>
+	rgi();
 	setTimeout(
 		function(){
 			document.getElementById("container").style.visibility = "visible";
 		}, 100);
+	<% end %>
 }
-<% end %>
 </script>
 
 <%+footer%>

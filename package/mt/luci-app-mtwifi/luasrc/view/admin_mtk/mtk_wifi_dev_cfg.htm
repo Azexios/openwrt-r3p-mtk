@@ -28,14 +28,6 @@ for _,v in ipairs(devs) do
 end
 
 local cfgs = mtkwifi.load_profile(dev.profile)
-
-if not mtkwifi.exists("/etc/wireless/mt7603/") then
-	mt1 = ""
-elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
-	mt1 = "mt7612"
-else
-	mt1 = "mt7603"
-end
 %>
 
 <style type="text/css">
@@ -84,14 +76,14 @@ table {
 	<form method="post" name="cbi" action="<%=luci.dispatcher.build_url("admin", "network", "wifi", "dev_cfg", devname)%>" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')" autocomplete="off">
 		<fieldset class="cbi-section">
 			<legend><span class="ren"> Device Configurations - <%=devname%></span> 
-	<%
-	local diff = mtkwifi.diff_profile(dev.profile)
-	if next(diff) ~= nil then
-	%>
-	<span id="reload" style="color:red; display:none;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
-	<%
-		end
-	%>
+			<%
+			local diff = mtkwifi.diff_profile(dev.profile)
+			if next(diff) ~= nil then
+			%>
+			<span id="reload" style="color:red; display:none;">(<a href="#" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "reload", devname)%>");return false;'>reload</a> to apply changes)</span>
+			<%
+				end
+			%>
 			</legend>
 			<table id="dev-cfg-basic" class="cbi-section-table">
 				<% if cfgs.WirelessMode then %>

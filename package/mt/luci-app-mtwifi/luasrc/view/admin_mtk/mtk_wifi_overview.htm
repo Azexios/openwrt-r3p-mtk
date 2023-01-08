@@ -17,14 +17,6 @@
 local mtkwifi = require("mtkwifi")
 local mtkwifis = require("mtkwifis")
 local devs = mtkwifi.get_all_devs()
-
-if not mtkwifi.exists("/etc/wireless/mt7603/") then
-	mt1 = ""
-elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
-	mt1 = "mt7612"
-else
-	mt1 = "mt7603"
-end
 %>
 
 <style type="text/css">
@@ -167,9 +159,9 @@ table {
 				<!-- /network list -->
 				<!-- apcli list -->
 				<% if dev.apcli then %>
-				<tr>
+				<tr id="refresh_<%=dev.apcli.devname%>">
 					<td></td>
-					<td class="cbi-value-field" style="width:16px; padding:3px">
+					<td class="cbi-value-field <%=dev.apcli.devname%>" style="width:16px; padding:3px">
 						<% if dev.apcli.state == "up" then %>
 							<% if dev.apcli.status == "Connected" then %>
 							<img src="/luci-static/resources/icons/signal-75-100.png" alt="" />
@@ -183,7 +175,7 @@ table {
 					<td class="cbi-value-field" style="min-width:150px;vertical-align:middle; text-align:left; padding:3px"><strong>Interface:</strong> <%=dev.apcli.devname%> | <strong>Type:</strong> STA | <strong>Status:</strong> <%=dev.apcli.status%>
 						<br/>
 						<% if dev.apcli.status == "Connected" then %>
-						<strong>BSSID:</strong> <%=dev.apcli.bssid%> |
+						<strong id="<%=dev.apcli.devname%>_connected">BSSID:</strong> <%=dev.apcli.bssid%> |
 						<strong>SSID:</strong> <%=dev.apcli.ssid%>
 						<br/>
 						<strong>Signal level:</strong> <%=dev.apcli.signal%> | <strong>Bit Rate:</strong> <%=dev.apcli.rate%>
@@ -194,14 +186,23 @@ table {
 							Wireless is disabled
 							<% end %>
 						<% end %>
+						<div id="<%=dev.apcli.devname%>_s" style="color:red;">* the status is being updated</div>
 					</td>
 					<td style="text-align:right">
 						<% if dev.apcli.state == "up" then %>
-						<input class="cbi-button cbi-button-reload" style="width:100px" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
-						<input class="cbi-button cbi-button-remove" style="width:100px" title="Disable Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
+							<% if dev.Channel == 0 then %>
+								<input class="cbi-button cbi-button-reload" style="width:100px" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='apcli_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect_ch0", dev.devname, dev.apcli.vifname)%>", "<%=dev.apcli.devname%>")' />
+							<% else %>
+								<input class="cbi-button cbi-button-reload" style="width:100px" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='apcli_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>", "<%=dev.apcli.devname%>")' />
+							<% end %>
+							<input class="cbi-button cbi-button-remove" style="width:100px" title="Disable Wi-Fi network" value="Disable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_disconnect", dev.devname, dev.apcli.vifname)%>")' />
 						<% else %>
-						<input class="cbi-button cbi-button-reload" style="width:100px" disabled="disabled" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
-						<input class="cbi-button cbi-button-reload" style="width:100px" title="Enable Wi-Fi network" value="Enable" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
+							<input class="cbi-button cbi-button-reload" style="width:100px" disabled="disabled" title="Reconnect Wi-Fi network" value="Reconnect" type="button" onclick='wifi_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>")' />
+							<% if dev.Channel == 0 then %>
+								<input class="cbi-button cbi-button-reload" style="width:100px" title="Enable Wi-Fi network" value="Enable" type="button" onclick='apcli_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect_ch0", dev.devname, dev.apcli.vifname)%>", "<%=dev.apcli.devname%>")' />
+							<% else %>
+								<input class="cbi-button cbi-button-reload" style="width:100px" title="Enable Wi-Fi network" value="Enable" type="button" onclick='apcli_reload("<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_connect", dev.devname, dev.apcli.vifname)%>", "<%=dev.apcli.devname%>")' />
+							<% end %>
 						<% end %>
 						<input class="cbi-button cbi-button-edit" style="width:100px" title="Configure Wi-Fi device" value="Config" type="button" onclick="location.href='<%=luci.dispatcher.build_url("admin", "network", "wifi", "apcli_cfg_view", dev.devname, dev.apcli.vifname)%>'" />
 					</td>
@@ -352,6 +353,7 @@ table {
 <script type="text/javascript">
 function wifi_reload(url) {
 	Stop();
+	apcli_up_stop();
 	window.scrollTo(0, 0);
 	document.getElementById('loading').style.display="";
 	reload();
@@ -359,21 +361,47 @@ function wifi_reload(url) {
 		function(x)
 		{
 			console.log(x);
-			document.getElementById("loading").style.display="none";
 			window.location.reload();
 		}
 	);
 }
 
-function reload() {
-	setInterval(function() {
-		if (navigator.onLine) {
-			window.location.reload();
+function apcli_reload(url, apcli) {
+	Stop();
+	apcli_up_stop();
+	reload_apcli(apcli);
+	window.scrollTo(0, 0);
+	document.getElementById('loading').style.display="";
+	XHR.get(url, null,
+		function(x)
+		{
+		console.log(x);
+		localStorage.setItem(""+apcli+"_update", "true");
+		window.location.reload();
 		}
+	);
+}
+
+function reload_apcli(apcli) {
+	setTimeout(function(){
+		setInterval(function() {
+			if (navigator.onLine) {
+				localStorage.setItem(""+apcli+"_update", "true");
+				window.location.reload();
+			}
+		}, 5000);
 	}, 20000);
 }
 
-$('link[rel=stylesheet][href*="mobile.css"]').remove();
+function reload() {
+	setTimeout(function(){
+		setInterval(function() {
+			if (navigator.onLine) {
+				window.location.reload();
+			}
+		}, 5000);
+	}, 15000);
+}
 
 function resizeTables(sharedSize) {
 	if ($(window).width() > 700) {
@@ -408,9 +436,15 @@ function rgi() {
 	});
 }
 
+var apcli0_update = localStorage.getItem("apcli0_update");
+var apclii0_update = localStorage.getItem("apclii0_update");
 var mixBut = document.getElementById("mixBut");
-mixBut.addEventListener("click", Start);
+
 timer = false;
+timer_apcli0 = false;
+timer_apclii0 = false;
+
+mixBut.addEventListener("click", Start);
 
 function Start(){
 	timer = setInterval(a, 5000);
@@ -436,13 +470,54 @@ function a(){
 	}
 }
 
+function apcli_up(up){
+	if ($("#"+up+"_connected").length != 0) {
+		apcli_up_stop();
+		setTimeout(function(){
+			$("#refresh_"+up+"").load(" #refresh_"+up+" > *");
+			setTimeout(function(){
+				document.getElementById(""+up+"_s").style.display="none";
+			}, 5000);
+		}, 5000);
+	} else {
+		if ($(".pause_"+up+"_up").length == 0) {
+			$("."+up+"").addClass("pause_"+up+"_up");
+			$("#refresh_"+up+"").load(" #refresh_"+up+" > *");
+		}
+	}
+}
+
+function apcli_up_stop(){
+	if (timer_apcli0 != false) {
+		clearInterval(timer_apcli0);
+		timer_apcli0 = false;
+	}
+	if (timer_apclii0 != false) {
+		clearInterval(timer_apclii0);
+		timer_apclii0 = false;
+	}
+}
+
 window.onload = function() {
-  <% if mt1 ~= "" then %>rgi();<% end %>
-  resizeTables('1');
-  setTimeout(
-	function(){
-		document.getElementById("container").style.visibility = "visible";
-	}, 100);
+	<% if mt1 ~= "" then %>rgi();<% end %>
+	$('link[rel=stylesheet][href*="mobile.css"]').remove();
+	resizeTables('1');
+	document.getElementById('apcli0_s').style.display="none";
+	document.getElementById('apclii0_s').style.display="none";
+	setTimeout(
+		function(){
+			document.getElementById("container").style.visibility = "visible";
+		}, 100);
+	if (apcli0_update) {
+		localStorage.removeItem("apcli0_update");
+		document.getElementById('apcli0_s').style.display="";
+		timer_apcli0 = setInterval(apcli_up, 5000, "apcli0");
+	} 
+	if (apclii0_update) {
+		localStorage.removeItem("apclii0_update");
+		document.getElementById('apclii0_s').style.display="";
+		timer_apclii0 = setInterval(apcli_up, 5000, "apclii0");
+	}
 }
 </script>
 

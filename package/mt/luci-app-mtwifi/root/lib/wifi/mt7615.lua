@@ -110,14 +110,14 @@ function mt7615_up(devname)
 
 	if not devname then
 		-- we have to bring up root vif first, root vif will create all other vifs.
-		mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(ra[0-9])|apcli0' && echo 1")
-		mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(rai[0-9])|apclii0' && echo 1")
+		local mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(ra[0-9])|apcli0' && echo -n 1")
+		local mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -qE '(rai[0-9])|apclii0' && echo -n 1")
 
-		if mt2 == "1\n" then
+		if mt2 == "1" then
 			nixio.syslog("debug", "MTK-Wi-Fi: restart - ifconfig ra0 up")
 			os.execute("ifconfig ra0 up")
 		end	
-		if mt5 == "1\n" then
+		if mt5 == "1" then
 			nixio.syslog("debug", "MTK-Wi-Fi: restart - ifconfig rai0 up")
 			os.execute("ifconfig rai0 up")
 		end
@@ -127,6 +127,25 @@ function mt7615_up(devname)
 	do
 		nixio.syslog("debug", "MTK-Wi-Fi: ifconfig "..vif.." up")
 		os.execute("ifconfig "..vif.." up")
+	end
+
+	for _,apcli in ipairs(string.split(mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -E 'apcli(i{0,1}0)'"), "\n"))
+	do
+		if apcli == "apcli0" then
+			apcli_dev = "mt7615.1"
+		else
+			apcli_dev = "mt7615.2"
+		end
+
+		local apcli_auto = mtkwifi.read_pipe("grep -q 'ApCliAuto=1' /etc/wireless/mt7615/"..apcli_dev..".dat && echo -n 1")
+		local apcli_enable = mtkwifi.read_pipe("grep -q 'ApCliEnable=1' /etc/wireless/mt7615/"..apcli_dev..".dat && echo -n 1")
+
+		if apcli_enable == "1" then
+			if apcli_auto == "1" then
+				nixio.syslog("debug", "MTK-Wi-Fi: iwpriv "..apcli.." set ApCliAutoConnect=3")
+				os.execute("iwpriv "..apcli.." set ApCliAutoConnect=3")
+			end
+		end
 	end
 end
 
@@ -147,14 +166,14 @@ function mt7615_down_r()
 	local mtkwifi = require("mtkwifi")
 	nixio.syslog("debug", "MTK-Wi-Fi: down_r called!")
 	
-	mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q ra0 && echo 1")
-	mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q rai0 && echo 1")
+	local mt2 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q ra0 && echo -n 1")
+	local mt5 = mtkwifi.read_pipe("cat /tmp/mtk/vifup-save | grep -q rai0 && echo -n 1")
 	
-	if mt2 ~= "1\n" then
+	if mt2 ~= "1" then
 		nixio.syslog("debug", "MTK-Wi-Fi: restart - ifconfig ra0 down")
 		os.execute("ifconfig ra0 down")
 	end		
-	if mt5 ~= "1\n" then
+	if mt5 ~= "1" then
 		nixio.syslog("debug", "MTK-Wi-Fi: restart - ifconfig rai0 down")
 		os.execute("ifconfig rai0 down")
 	end
@@ -163,7 +182,7 @@ end
 function mt7615_reload(devname)
 	local nixio = require("nixio")
 	nixio.syslog("debug", "MTK-Wi-Fi: reload called!")
-	
+
 	mt7615_vifup_save(devname)
 	mt7615_ifup_save(devname)
 	mt7615_ifup_down(devname)
@@ -176,7 +195,7 @@ function mt7615_restart(devname)
 	local nixio = require("nixio")
 	local mtkwifi = require("mtkwifi")
 	nixio.syslog("debug", "MTK-Wi-Fi: restart called!")
-	
+
 	mt7615_vifup_save()
 	mt7615_ifup_save()
 	mt7615_ifup_down(devname)

@@ -40,14 +40,6 @@ end
 
 local cfgs = mtkwifi.load_profile(dev.profile)
 local WscValue = mtkwifi.token_get(cfgs["WscConfMode"], vifidx, "0") or "0"
-
-if not mtkwifi.exists("/etc/wireless/mt7603/") then
-	mt1 = ""
-elseif mtkwifi.exists("/etc/wireless/mt7603/") and mtkwifi.exists("/etc/wireless/mt7612/") then
-	mt1 = "mt7612"
-else
-	mt1 = "mt7603"
-end
 %>
 
 <style type="text/css">
@@ -169,7 +161,7 @@ table {
 						</option>
 						<% end %>
 					<% end %>
-				</select>
+				</select><span id="auth_mode" class="he1" style="color:red; display:none;">Open network</span>
 				</td>
 			</tr>
 			</tbody>
@@ -524,18 +516,13 @@ function AuthMode_onchange(to) {
 			if (e) e.style.display = "none";
 		}
 	}
-	
+
 	if (to == "WPA2" || to == "IEEE8021X" || to == "WPA1WPA2") {
 		document.getElementById("radius").style.display = "";
 	} else {
 		document.getElementById("radius").style.display = "none";
 	}
-	if (to == "WPA2" || to == "IEEE8021X" || to == "WPA1WPA2") {
-		document.getElementById("radius").style.display = "";
-	} else {
-		document.getElementById("radius").style.display = "none";
-	}
-	
+
 	if (to == "WPA2" || to == "WPA2PSK" || to == "WPA1WPA2") {
 		document.getElementById("MFP").style.display = "";
 	} else {
@@ -556,13 +543,13 @@ function AuthMode_onchange(to) {
 	} else {
 		document.getElementById("MFP4").style.display = "none";
 	}
-	
+
 	if (to == "WPA2" || to == "WPA2PSK" || to == "WPAPSKWPA2PSK" || to == "WPA1WPA2" || to == "WPA3PSK" || to == "WPA2PSKWPA3PSK") {
 		document.getElementById("key_r").style.display = "";
 	} else {
 		document.getElementById("key_r").style.display = "none";
 	}
-	
+
 	if (to == "WPA2" || to == "WPA2PSK" || to == "WPAPSKWPA2PSK" || to == "WPA1WPA2") {
 		document.getElementById("wpacommon").style.display = "";
 	} else {
@@ -576,6 +563,12 @@ function AuthMode_onchange(to) {
 
 	if (to == "WPA2PSK" || to == "WPA3PSK" || to == "WPAPSKWPA2PSK" || to == "WPA2PSKWPA3PSK") {
 		document.getElementById("WPA2PSK").style.display = "";
+	}
+
+	if (to == "Disable" || to == "OWE") {
+		document.getElementById("auth_mode").style.display = "";
+	} else {
+		document.getElementById("auth_mode").style.display = "none";
 	}
 }
 
