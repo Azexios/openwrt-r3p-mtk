@@ -502,8 +502,12 @@ window.onload = function() {
 	<% if mt1 ~= "" then %>rgi();<% end %>
 	$('link[rel=stylesheet][href*="mobile.css"]').remove();
 	resizeTables('1');
-	document.getElementById('apcli0_s').style.display="none";
-	document.getElementById('apclii0_s').style.display="none";
+	if ($('#apcli0_s').length > 0) {
+		document.getElementById('apcli0_s').style.display="none";
+	}
+	if ($('#apclii0_s').length > 0) {
+		document.getElementById('apclii0_s').style.display="none";
+	}
 	setTimeout(
 		function(){
 			document.getElementById("container").style.visibility = "visible";
