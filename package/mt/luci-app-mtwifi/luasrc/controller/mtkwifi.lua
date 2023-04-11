@@ -371,7 +371,21 @@ function vif_del(dev, vif)
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
 
-function vif_disable(iface)
+function vif_disable(dev, iface)
+	local devname = dev
+	local profiles = mtkwifi.search_dev_and_profile()
+	assert(profiles[devname])
+
+	local cfgs = mtkwifi.load_profile(profiles[devname])
+
+	if iface == "ra0" or iface == "rai0" then
+		if cfgs.EAPifname == "br-lan" then
+			local mt_lan = mtkwifi.read_pipe("uci show network.cfg030f15.ports | grep -q "..iface.." && echo -n 1")
+			if mt_lan == "1" then
+				os.execute("uci del_list network.cfg030f15.ports='"..iface.."'; uci commit network; logger -t MTK-Wi-Fi Remove "..iface.." from br-lan")
+			end
+		end
+	end
 	os.execute("ifconfig "..iface.." down")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "network", "wifi"))
 end
